@@ -10,7 +10,6 @@ const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
-const fs = require("fs");
 
 const app = express();
 
@@ -63,16 +62,6 @@ app.use("/api/holidays", holidayRoutes);
 app.use("/api/settings", settingsRoutes);
 
 connectDB();
-
-console.log("=== DEBUG: Filesystem check ===");
-console.log("__dirname is:", __dirname);
-console.log("Parent folder contents:", fs.readdirSync(path.join(__dirname, "..")));
-try {
-    console.log("frontend folder contents:", fs.readdirSync(path.join(__dirname, "..", "frontend")));
-} catch (err) {
-    console.log("Could NOT read frontend folder:", err.message);
-}
-console.log("=== END DEBUG ===");
 
 // Start Server
 app.listen(PORT, () => {
