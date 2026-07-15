@@ -26,7 +26,8 @@ const EMPLOYEE_MENU = [
     { href: "my-attendance.html",      icon: "fa-calendar-check",    label: "My Attendance" },
     { href: "my-leave.html",           icon: "fa-file-circle-check", label: "My Leave" },
     { href: "holidays.html",           icon: "fa-calendar-days",     label: "Holidays" },
-    { href: "directory.html",          icon: "fa-users",             label: "Directory" }
+    { href: "directory.html",          icon: "fa-users",             label: "Directory" },
+    { href: "my-account.html",         icon: "fa-user-gear",         label: "My Account" }
 
 ];
 

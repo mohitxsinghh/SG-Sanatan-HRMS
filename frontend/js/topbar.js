@@ -124,6 +124,11 @@ const pageDetails = {
     "directory.html": {
         title: "Employee Directory",
         subtitle: "Browse company departments and colleagues"
+    },
+
+    "my-account.html": {
+        title: "My Account",
+        subtitle: "Update your name, email, and password"
     }
 
 };

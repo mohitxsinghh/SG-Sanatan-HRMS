@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Employee'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Account | SG Sanatan HRMS</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <main class="content">
+
+            <div id="commonTopbar"></div>
+
+            <div class="settings-grid">
+
+                <section class="settings-card">
+
+                    <div class="settings-card-header">
+
+                        <div class="settings-icon"><i class="fa-solid fa-user-gear"></i></div>
+
+                        <div>
+                            <h2>My Account</h2>
+                            <p>Your own login name, email, and password.</p>
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label>Name</label>
+                            <input type="text" id="accountName" placeholder="Your name">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Email</label>
+                            <input type="email" id="accountEmail" placeholder="your@email.com">
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label>Current Password <small>(required only if changing password)</small></label>
+                            <input type="password" id="currentPassword" placeholder="Enter current password">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>New Password</label>
+                            <input type="password" id="newPassword" placeholder="Leave blank to keep current">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirmPassword" placeholder="Re-enter new password">
+
+                        </div>
+
+                    </div>
+
+                    <button class="save-section-btn" id="saveAccountBtn">
+                        <i class="fa-solid fa-check"></i> Save My Account
+                    </button>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/my-account.js"></script>
+
+</body>
+
+</html>
