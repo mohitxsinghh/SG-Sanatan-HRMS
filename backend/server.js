@@ -6,6 +6,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
@@ -27,9 +28,28 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
+// Serve the frontend (HTML/CSS/JS) directly from Express, so the whole
+// app is one deployable service - no separate hosting, no CORS between
+// two different domains. "../frontend" works because the frontend
+// folder sits right next to this backend folder, both checked out
+// together from the same GitHub repo.
+
+app.use(express.static(path.join(__dirname, "..", "frontend")));
+
+// Simple health check - useful once this is deployed, to confirm the
+// server is alive without needing to log in first.
+
+app.get("/api/status", (req, res) => {
+
+    res.json({ status: "ok", message: "SG SANATAN HRMS Backend is running" });
+
+});
+
+// Visiting the bare domain goes straight to the login page.
+
 app.get("/", (req, res) => {
 
-    res.send("Welcome to SG SANATAN HRMS Backend!");
+    res.redirect("/login.html");
 
 });
 

@@ -5,11 +5,12 @@
 // calling fetch() directly, so token-attaching and error-handling
 // only has to be written once.
 //
-// If you serve the backend somewhere other than localhost:3000
-// later (e.g. when you deploy), this is the ONE line to change.
-// ===========================================
+// If you serve the backend somewhere other than where the frontend
+// is loaded from, change this. As of Step 3 of deployment, Express
+// serves both from the same origin, so a relative path just works -
+// no matter whether that origin is localhost:3000 or your live domain.
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "/api";
 
 async function apiFetch(endpoint, options = {}) {
 
