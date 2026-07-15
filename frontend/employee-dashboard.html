@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Employee'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Dashboard | SG Sanatan HRMS</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <!-- Main -->
+
+        <main class="content">
+
+            <div id="commonTopbar"></div>
+
+            <!-- Stat Cards -->
+
+            <section class="stats-cards">
+
+                <div class="stat-card">
+
+                    <i class="fa-solid fa-calendar-check"></i>
+
+                    <div>
+                        <h2 id="todayStatus">Not Marked</h2>
+                        <p>Today's Status</p>
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <i class="fa-solid fa-chart-simple"></i>
+
+                    <div>
+                        <h2 id="monthAttendancePercent">0%</h2>
+                        <p>This Month Attendance</p>
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <i class="fa-solid fa-plane-departure"></i>
+
+                    <div>
+                        <h2 id="leaveDaysLeft">0</h2>
+                        <p>Leave Days Remaining</p>
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <i class="fa-solid fa-calendar-days"></i>
+
+                    <div>
+                        <h2 id="nextHolidayName">-</h2>
+                        <p id="nextHolidayCountdown">Next Holiday</p>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Quick Actions -->
+
+            <section class="quick-actions">
+
+                <h2>Quick Actions</h2>
+
+                <div class="action-grid">
+
+                    <a href="my-attendance.html" class="action-card">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Mark Attendance</span>
+                    </a>
+
+                    <a href="my-leave.html" class="action-card">
+                        <i class="fa-solid fa-file-circle-check"></i>
+                        <span>Apply Leave</span>
+                    </a>
+
+                    <a href="holidays.html" class="action-card">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <span>Holidays</span>
+                    </a>
+
+                    <a href="directory.html" class="action-card">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Directory</span>
+                    </a>
+
+                </div>
+
+            </section>
+
+            <div class="dashboard-bottom">
+
+                <!-- Recent Attendance -->
+
+                <div class="dashboard-section">
+
+                    <h2>My Recent Attendance</h2>
+
+                    <table class="dashboard-table">
+
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="recentAttendanceTable">
+
+                            <tr><td colspan="4">No records yet.</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <!-- Leave Balance -->
+
+                <div class="dashboard-section">
+
+                    <h2>My Leave Balance</h2>
+
+                    <ul class="recent-list" id="leaveBalanceList">
+
+                        <!-- Dynamic -->
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/employee-dashboard.js"></script>
+
+</body>
+
+</html>

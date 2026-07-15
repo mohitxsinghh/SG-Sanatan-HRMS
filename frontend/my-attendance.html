@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Employee'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Attendance | SG Sanatan HRMS</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/attendance.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <main class="attendance-main">
+
+            <div id="commonTopbar"></div>
+
+            <div class="attendance-content">
+
+                <!-- Punch Card -->
+
+                <div class="punch-card">
+
+                    <div class="punch-info">
+
+                        <h2 id="punchStatusText">Not Marked Today</h2>
+                        <p id="punchTimesText">You haven't punched in yet.</p>
+
+                    </div>
+
+                    <div class="punch-actions">
+
+                        <select id="punchStatusSelect">
+                            <option value="Present">Present</option>
+                            <option value="Half Day">Half Day</option>
+                        </select>
+
+                        <button class="btn-present" id="punchInBtn">
+                            <i class="fa-solid fa-right-to-bracket"></i> Punch In
+                        </button>
+
+                        <button class="btn-halfday" id="punchOutBtn" style="display:none;">
+                            <i class="fa-solid fa-right-from-bracket"></i> Punch Out
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- This Month Cards -->
+
+                <div class="attendance-cards">
+
+                    <div class="card">
+                        <h3>This Month Records</h3>
+                        <span id="monthTotal">0</span>
+                    </div>
+
+                    <div class="card present">
+                        <h3>Present</h3>
+                        <span id="monthPresent">0</span>
+                    </div>
+
+                    <div class="card absent">
+                        <h3>Absent</h3>
+                        <span id="monthAbsent">0</span>
+                    </div>
+
+                    <div class="card halfday">
+                        <h3>Half Day</h3>
+                        <span id="monthHalfDay">0</span>
+                    </div>
+
+                    <div class="card leave">
+                        <h3>Leave</h3>
+                        <span id="monthLeave">0</span>
+                    </div>
+
+                </div>
+
+                <!-- History -->
+
+                <div class="toolbar">
+
+                    <div class="toolbar-left">
+
+                        <input type="date" id="historyFrom">
+                        <span class="range-sep">to</span>
+                        <input type="date" id="historyTo">
+
+                    </div>
+
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                                <th>Working Hours</th>
+                                <th>Overtime</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="historyTable">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/my-attendance.js"></script>
+
+</body>
+
+</html>

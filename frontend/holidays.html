@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin', 'Employee'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Holidays | SG Sanatan HRMS</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/holidays.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Header -->
+            <div id="commonTopbar"></div>
+
+            <!-- Cards -->
+            <div class="cards">
+
+                <div class="card">
+
+                    <h3>Total Holidays</h3>
+                    <h2 id="totalHolidays">0</h2>
+
+                </div>
+
+                <div class="card upcoming">
+
+                    <h3>Upcoming</h3>
+                    <h2 id="upcomingHolidays">0</h2>
+
+                </div>
+
+                <div class="card thismonth">
+
+                    <h3>This Month</h3>
+                    <h2 id="thisMonthHolidays">0</h2>
+
+                </div>
+
+                <div class="card next">
+
+                    <h3>Next Holiday</h3>
+                    <h2 id="nextHolidayName">-</h2>
+                    <p id="nextHolidayCountdown"></p>
+
+                </div>
+
+            </div>
+
+            <!-- Toolbar -->
+
+            <div class="toolbar">
+
+                <div class="toolbar-left">
+
+                    <input
+                        type="text"
+                        id="searchHoliday"
+                        placeholder="Search holiday..."
+                        autocomplete="off">
+
+                    <select id="typeFilter">
+
+                        <option value="">All Types</option>
+                        <option value="National">National</option>
+                        <option value="Festival">Festival</option>
+                        <option value="Company">Company</option>
+                        <option value="Optional">Optional</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- Holidays Table -->
+
+            <div class="table-box">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Holiday</th>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="holidayTable">
+
+                        <!-- Dynamic rows -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- ===================================
+     ADD / EDIT HOLIDAY MODAL
+    =================================== -->
+
+    <div class="modal" id="holidayModal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="modalTitle">Add Holiday</h2>
+
+                <button class="close-btn" id="closeModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="holidayForm">
+
+                <div class="form-grid">
+
+                    <div class="form-group full-width">
+
+                        <label>Holiday Name *</label>
+                        <input type="text" id="holidayName" placeholder="e.g. Independence Day">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Date *</label>
+                        <input type="date" id="holidayDate">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Type</label>
+
+                        <select id="holidayType">
+                            <option>National</option>
+                            <option>Festival</option>
+                            <option>Company</option>
+                            <option>Optional</option>
+                        </select>
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label>Description</label>
+                        <textarea id="holidayDescription" rows="2" placeholder="Optional notes"></textarea>
+
+                    </div>
+
+                </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="cancel-btn" id="cancelBtn">
+                    Cancel
+                </button>
+
+                <button type="button" class="save-btn" id="saveBtn">
+                    Save Holiday
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/holidays.js"></script>
+
+</body>
+
+</html>

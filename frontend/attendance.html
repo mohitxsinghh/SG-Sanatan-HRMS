@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance | SG Sanatan HRMS</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/attendance.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <!-- Main -->
+
+        <main class="attendance-main">
+
+            <!-- Header -->
+
+            <div id="commonTopbar">
+            </div>
+
+            <div class="attendance-content">
+
+                <!-- Dashboard Cards -->
+
+                <div class="attendance-cards">
+
+                    <div class="card">
+
+                        <h3>Total Employees</h3>
+
+                        <span id="totalEmployees">0</span>
+
+                    </div>
+
+                    <div class="card present">
+
+                        <h3>Present</h3>
+
+                        <span id="presentCount">0</span>
+
+                    </div>
+
+                    <div class="card absent">
+
+                        <h3>Absent</h3>
+
+                        <span id="absentCount">0</span>
+
+                    </div>
+
+                    <div class="card halfday">
+
+                        <h3>Half Day</h3>
+
+                        <span id="halfDayCount">0</span>
+
+                    </div>
+
+                    <div class="card leave">
+
+                        <h3>Leave</h3>
+
+                        <span id="leaveCount">0</span>
+
+                    </div>
+
+                </div>
+
+                <!-- Toolbar -->
+
+                <div class="toolbar">
+
+                    <div class="toolbar-left">
+
+                        <input
+                            type="text"
+                            id="attendanceSearch"
+                            placeholder="Search employee...">
+
+                        <select id="departmentFilter">
+
+                            <option value="">All Departments</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="toolbar-right">
+
+                        <button class="btn-present"
+                            onclick="markAll('Present')">
+
+                            <i class="fa-solid fa-check"></i>
+
+                            Present
+
+                        </button>
+
+                        <button class="btn-absent"
+                            onclick="markAll('Absent')">
+
+                            <i class="fa-solid fa-xmark"></i>
+
+                            Absent
+
+                        </button>
+
+                        <button class="btn-halfday"
+                            onclick="markAll('Half Day')">
+
+                            <i class="fa-solid fa-clock"></i>
+
+                            Half Day
+
+                        </button>
+
+                        <button class="btn-leave"
+                            onclick="markAll('Leave')">
+
+                            <i class="fa-solid fa-calendar-minus"></i>
+
+                            Leave
+
+                        </button>
+
+                        <button class="btn-export"
+                            onclick="exportAttendance()">
+
+                            <i class="fa-solid fa-file-export"></i>
+
+                            Export
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- Table -->
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Employee</th>
+
+                                <th>Department</th>
+
+                                <th>Status</th>
+
+                                <th>Check In</th>
+
+                                <th>Check Out</th>
+
+                                <th>Action</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="attendanceTable">
+
+                            <tr><td colspan="6">Loading attendance...</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            
+            </div>
+
+        </main>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/attendance.js"></script>
+
+</body>
+</html>

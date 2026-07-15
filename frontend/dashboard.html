@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | SG Sanatan HRMS</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- ================= Sidebar ================= -->
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <!-- ================= Main ================= -->
+
+        <main class="content">
+
+            <!-- Top Header -->
+
+            <div id="commonTopbar"></div>
+
+            <!-- Statistics Cards -->
+
+            <section class="stats-cards">
+
+                <div class="stat-card">
+
+                    <i class="fa-solid fa-users"></i>
+
+                    <div>
+
+                        <h2 id="totalEmployees">
+
+                            0
+
+                        </h2>
+
+                        <p>Total Employees</p>
+
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <i class="fa-solid fa-user-check"></i>
+
+                    <div>
+
+                        <h2 id="presentToday">
+
+                            0
+
+                        </h2>
+
+                        <p>Present Today</p>
+
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <i class="fa-solid fa-user-xmark"></i>
+
+                    <div>
+
+                        <h2 id="absentToday">
+
+                            0
+
+                        </h2>
+
+                        <p>Absent Today</p>
+
+                    </div>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <i class="fa-solid fa-plane-departure"></i>
+
+                    <div>
+
+                        <h2 id="leaveToday">
+
+                            0
+
+                        </h2>
+
+                        <p>Leave</p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- Quick Actions -->
+
+            <section class="quick-actions">
+
+                <h2>
+
+                    Quick Actions
+
+                </h2>
+
+                <div class="action-grid">
+
+                    <a href="employees.html" class="action-card">
+
+                        <i class="fa-solid fa-user-plus"></i>
+
+                        <span>Add Employee</span>
+
+                    </a>
+
+                    <a href="attendance.html" class="action-card">
+
+                        <i class="fa-solid fa-calendar-check"></i>
+
+                        <span>Attendance</span>
+
+                    </a>
+
+                    <a href="reports.html" class="action-card">
+
+                        <i class="fa-solid fa-chart-line"></i>
+
+                        <span>Reports</span>
+
+                    </a>
+
+                    <a href="departments.html" class="action-card">
+
+                        <i class="fa-solid fa-building"></i>
+
+                        <span>Departments</span>
+
+                    </a>
+
+                </div>
+
+            </section>
+
+            <!-- ================= Dashboard Bottom ================= -->
+
+            <div class="dashboard-bottom">
+
+                <!-- Today's Attendance -->
+
+                <div class="dashboard-section">
+
+                    <h2>Today's Attendance</h2>
+
+                    <table class="dashboard-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Employee</th>
+
+                                <th>Status</th>
+
+                                <th>Check In</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="todayAttendanceTable">
+
+                            <tr>
+
+                                <td colspan="3">
+
+                                    No attendance marked today.
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <!-- Recently Added Employees -->
+
+                <div class="dashboard-section">
+
+                    <h2>Recently Added Employees</h2>
+
+                    <ul class="recent-list" id="recentEmployees">
+
+                        <li>No employees available.</li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+            <!-- ================= Dashboard Footer ================= -->
+
+            <div class="dashboard-footer">
+
+                <!-- Attendance Overview -->
+
+                <div class="dashboard-section">
+
+                    <h2>Attendance Overview</h2>
+
+                    <div class="overview-list">
+
+                        <div class="overview-item present">
+
+                            <span>🟢 Present</span>
+
+                            <strong id="overviewPresent">0</strong>
+
+                        </div>
+
+                        <div class="overview-item absent">
+
+                            <span>🔴 Absent</span>
+
+                            <strong id="overviewAbsent">0</strong>
+
+                        </div>
+
+                        <div class="overview-item halfday">
+
+                            <span>🟡 Half Day</span>
+
+                            <strong id="overviewHalfDay">0</strong>
+
+                        </div>
+
+                        <div class="overview-item leave">
+
+                            <span>🔵 Leave</span>
+
+                            <strong id="overviewLeave">0</strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Notice Board -->
+
+                <div class="dashboard-section">
+
+                    <h2>Company Notice Board</h2>
+
+                    <ul class="notice-list">
+
+                        <li>📢 Independence Day Holiday - 15 August</li>
+
+                        <li>📢 Salary will be credited on the 1st of every month.</li>
+
+                        <li>📢 Monthly Team Meeting - 15 July at 11:00 AM.</li>
+
+                        <li>📢 Keep employee records updated regularly.</li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+            <!-- ================= Attendance Chart ================= -->
+
+            <section class="dashboard-section">
+
+                <h2>Attendance Statistics</h2>
+
+                <div class="chart-container">
+
+                    <canvas id="attendanceChart"></canvas>
+
+                </div>
+
+            </section>
+
+            <!-- ================= Recent Activity ================= -->
+
+            <section class="dashboard-section">
+
+                <h2>
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    Recent Activity
+                </h2>
+
+                <div id="activityFeed" class="activity-feed">
+
+                    <div class="activity-item">
+
+                        <i class="fa-solid fa-circle-info"></i>
+
+                        <div>
+
+                            <strong>No recent activity.</strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/dashboard.js"></script>
+
+</body>
+
+</html>

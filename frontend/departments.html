@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Departments | SG Sanatan HRMS</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/departments.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Header -->
+            <div id="commonTopbar"></div>
+
+            <!-- Cards -->
+            <div class="cards">
+
+                <div class="card">
+
+                    <h3>Total Departments</h3>
+                    <h2 id="totalDepartments">0</h2>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>Total Employees</h3>
+                    <h2 id="totalEmployeesInDepts">0</h2>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>Largest Department</h3>
+                    <h2 id="largestDepartment">-</h2>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>Empty Departments</h3>
+                    <h2 id="emptyDepartments">0</h2>
+
+                </div>
+
+            </div>
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    id="searchDepartment"
+                    placeholder="Search department..."
+                    autocomplete="off">
+
+            </div>
+
+            <!-- Departments Table -->
+
+            <div class="table-box">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Code</th>
+                            <th>Department</th>
+                            <th>Head</th>
+                            <th>Employees</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="departmentTable">
+
+                        <tr><td colspan="6">Loading departments...</td></tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- ===================================
+     ADD / EDIT DEPARTMENT MODAL
+    =================================== -->
+
+    <div class="modal" id="departmentModal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="modalTitle">Add Department</h2>
+
+                <button class="close-btn" id="closeModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="departmentForm">
+
+                <div class="form-grid">
+
+                    <div class="form-group full-width">
+
+                        <label>Department Name *</label>
+                        <input type="text" id="deptName" placeholder="e.g. Human Resources">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Department Head</label>
+
+                        <select id="deptHead">
+                            <option value="">Unassigned</option>
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Status</label>
+
+                        <select id="deptStatus">
+                            <option>Active</option>
+                            <option>Inactive</option>
+                        </select>
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label>Description</label>
+                        <textarea id="deptDescription" rows="2" placeholder="What this department is responsible for"></textarea>
+
+                    </div>
+
+                </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="cancel-btn" id="cancelBtn">
+                    Cancel
+                </button>
+
+                <button type="button" class="save-btn" id="saveBtn">
+                    Save Department
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/departments.js"></script>
+
+</body>
+
+</html>

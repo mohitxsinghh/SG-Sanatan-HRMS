@@ -1,0 +1,283 @@
+/* ===================================
+   SG SANATAN HRMS
+   Global Styles + Design Tokens
+=================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+
+    /* ---- Brand ---- */
+    --ink:#14161F;
+    --ink-soft:#1E212E;
+    --ink-line:rgba(255,255,255,.08);
+
+    --gold:#D9A521;
+    --gold-deep:#B3860F;
+    --gold-soft:#FBF1D9;
+
+    /* ---- Surfaces ---- */
+    --paper:#F3F4F8;
+    --surface:#FFFFFF;
+    --border:#E7E9F0;
+
+    /* ---- Text ---- */
+    --text-primary:#191B25;
+    --text-secondary:#6B7280;
+    --text-muted:#9AA1AF;
+
+    /* ---- Status (semantic, unchanged meaning) ---- */
+    --status-present:#16A34A;
+    --status-present-soft:#EAF9F0;
+    --status-absent:#E11D48;
+    --status-absent-soft:#FDEBEF;
+    --status-halfday:#F97316;
+    --status-halfday-soft:#FFF1E6;
+    --status-leave:#3B82F6;
+    --status-leave-soft:#EBF2FF;
+
+    /* ---- Type ---- */
+    --font-display:"Plus Jakarta Sans", sans-serif;
+    --font-body:"Inter", sans-serif;
+
+    /* ---- Shape / Elevation ---- */
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+
+    --shadow-sm:0 2px 8px rgba(20,22,31,.05);
+    --shadow-md:0 10px 25px rgba(20,22,31,.08);
+    --shadow-gold: 0 10px 25px rgba(217,165,33,.18);
+
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:var(--font-body);
+    background:var(--paper);
+    color:var(--text-primary);
+    -webkit-font-smoothing:antialiased;
+}
+
+h1,h2,h3,h4,
+.page-title,
+.stat-card h2,
+.card h2{
+    font-family:var(--font-display);
+}
+
+/* Focus visibility (accessibility) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+}
+
+@media (prefers-reduced-motion: reduce){
+    *{
+        animation-duration:0.001ms !important;
+        transition-duration:0.001ms !important;
+    }
+}
+
+/* ===============================
+   APP LAYOUT
+=============================== */
+
+.app{
+    display:flex;
+    min-height:100vh;
+}
+
+/* ===============================
+   SIDEBAR
+=============================== */
+
+.sidebar{
+    width:260px;
+    background:var(--ink);
+    color:#fff;
+    padding:28px 18px;
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    display:flex;
+    flex-direction:column;
+    border-right:1px solid var(--ink-line);
+}
+
+/* ===============================
+   LOGO
+=============================== */
+
+.logo{
+    text-align:center;
+    margin-bottom:36px;
+    padding-bottom:24px;
+    border-bottom:1px solid var(--ink-line);
+}
+
+.logo img{
+    width:72px;
+    height:72px;
+    object-fit:contain;
+    margin-bottom:14px;
+    border-radius:50%;
+    background:var(--ink-soft);
+    padding:6px;
+    box-shadow:0 0 0 2px var(--gold), 0 8px 20px rgba(217,165,33,.25);
+}
+
+.logo h2{
+    font-family:var(--font-display);
+    font-size:21px;
+    font-weight:700;
+    color:#ffffff;
+    letter-spacing:.2px;
+}
+
+.logo p{
+    color:var(--text-muted);
+    font-size:13px;
+    margin-top:4px;
+}
+
+/* ===============================
+   MENU
+=============================== */
+
+.sidebar ul{
+    list-style:none;
+    flex:1;
+}
+
+.sidebar li{
+    margin-bottom:4px;
+}
+
+.sidebar a{
+    text-decoration:none;
+    color:#9AA1B2;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:13px 16px;
+    border-radius:var(--radius-sm);
+    font-size:14.5px;
+    font-weight:500;
+    border-left:3px solid transparent;
+    transition:.2s ease;
+}
+
+.sidebar a:hover{
+    background:var(--ink-soft);
+    color:#fff;
+}
+
+.sidebar li.active a{
+    background:var(--ink-soft);
+    color:var(--gold);
+    border-left:3px solid var(--gold);
+    font-weight:600;
+}
+
+.sidebar i{
+    width:18px;
+    text-align:center;
+    font-size:15px;
+}
+
+/* ===============================
+   CONTENT
+=============================== */
+
+.content{
+    flex:1;
+    margin-left:260px;
+    padding:28px 32px;
+}
+
+/* ===============================
+   PRIMARY BUTTON (topbar action, add employee)
+=============================== */
+
+#addEmployeeBtn,
+.topbar-action-btn{
+    border:none;
+    background:var(--gold);
+    color:#231A03;
+    padding:13px 22px;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    font-family:var(--font-display);
+    font-size:14.5px;
+    font-weight:700;
+    transition:.2s ease;
+    box-shadow:var(--shadow-gold);
+}
+
+#addEmployeeBtn:hover,
+.topbar-action-btn:hover{
+    background:var(--gold-deep);
+    transform:translateY(-1px);
+}
+
+#addEmployeeBtn i{
+    margin-right:8px;
+}
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+
+@media(max-width:900px){
+
+    .sidebar{
+        width:80px;
+        padding:20px 10px;
+    }
+
+    .logo{
+        padding-bottom:16px;
+        margin-bottom:20px;
+    }
+
+    .logo p,
+    .logo h2{
+        display:none;
+    }
+
+    .logo img{
+        width:44px;
+        height:44px;
+    }
+
+    .sidebar a{
+        justify-content:center;
+        padding:13px 8px;
+    }
+
+    .sidebar a span{
+        display:none;
+    }
+
+    .content{
+        margin-left:80px;
+    }
+}
+
+@media(max-width:700px){
+
+    .content{
+        padding:16px;
+    }
+}

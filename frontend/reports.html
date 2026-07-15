@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Reports | SG Sanatan HRMS</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/reports.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Header -->
+            <div id="commonTopbar"></div>
+
+            <!-- Report Tabs -->
+
+            <div class="report-tabs">
+
+                <button class="tab-btn active" data-tab="attendance">
+                    <i class="fa-solid fa-calendar-check"></i> Attendance
+                </button>
+
+                <button class="tab-btn" data-tab="leave">
+                    <i class="fa-solid fa-file-circle-check"></i> Leave
+                </button>
+
+                <button class="tab-btn" data-tab="department">
+                    <i class="fa-solid fa-building"></i> Departments
+                </button>
+
+                <button class="tab-btn" data-tab="directory">
+                    <i class="fa-solid fa-users"></i> Employee Directory
+                </button>
+
+            </div>
+
+            <!-- ============================================
+                 ATTENDANCE REPORT
+            ============================================= -->
+
+            <section class="report-panel active" id="panel-attendance">
+
+                <div class="filter-bar">
+
+                    <select id="attnPreset">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month" selected>This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+
+                    <input type="date" id="attnFrom">
+                    <span class="range-sep">to</span>
+                    <input type="date" id="attnTo">
+
+                    <select id="attnDeptFilter">
+                        <option value="">All Departments</option>
+                    </select>
+
+                    <button class="export-btn" id="exportAttnBtn">
+                        <i class="fa-solid fa-file-export"></i> Export CSV
+                    </button>
+
+                </div>
+
+                <div class="cards">
+
+                    <div class="card"><h3>Records</h3><h2 id="attnTotalRecords">0</h2></div>
+                    <div class="card present"><h3>Present</h3><h2 id="attnPresentTotal">0</h2></div>
+                    <div class="card absent"><h3>Absent</h3><h2 id="attnAbsentTotal">0</h2></div>
+                    <div class="card ontoday"><h3>Avg Attendance</h3><h2 id="attnAvgPercent">0%</h2></div>
+
+                </div>
+
+                <div class="report-body">
+
+                    <div class="chart-box">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+
+                    <div class="table-box">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Department</th>
+                                    <th>Present</th>
+                                    <th>Absent</th>
+                                    <th>Half Day</th>
+                                    <th>Leave</th>
+                                    <th>Attendance %</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="attendanceReportTable"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============================================
+                 LEAVE REPORT
+            ============================================= -->
+
+            <section class="report-panel" id="panel-leave">
+
+                <div class="filter-bar">
+
+                    <select id="leavePreset">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month" selected>This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom</option>
+                    </select>
+
+                    <input type="date" id="leaveFrom">
+                    <span class="range-sep">to</span>
+                    <input type="date" id="leaveTo">
+
+                    <select id="leaveStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+
+                    <button class="export-btn" id="exportLeaveBtn">
+                        <i class="fa-solid fa-file-export"></i> Export CSV
+                    </button>
+
+                </div>
+
+                <div class="cards">
+
+                    <div class="card"><h3>Requests</h3><h2 id="leaveTotalRequests">0</h2></div>
+                    <div class="card ontoday"><h3>Pending</h3><h2 id="leavePendingTotal">0</h2></div>
+                    <div class="card present"><h3>Approved</h3><h2 id="leaveApprovedTotal">0</h2></div>
+                    <div class="card absent"><h3>Rejected</h3><h2 id="leaveRejectedTotal">0</h2></div>
+
+                </div>
+
+                <div class="report-body">
+
+                    <div class="chart-box">
+                        <canvas id="leaveChart"></canvas>
+                    </div>
+
+                    <div class="table-box">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Type</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="leaveReportTable"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============================================
+                 DEPARTMENT REPORT
+            ============================================= -->
+
+            <section class="report-panel" id="panel-department">
+
+                <div class="filter-bar">
+
+                    <p class="filter-note">Live snapshot — no date range applies here.</p>
+
+                    <button class="export-btn" id="exportDeptBtn">
+                        <i class="fa-solid fa-file-export"></i> Export CSV
+                    </button>
+
+                </div>
+
+                <div class="cards">
+
+                    <div class="card"><h3>Departments</h3><h2 id="deptTotalCount">0</h2></div>
+                    <div class="card"><h3>Total Employees</h3><h2 id="deptTotalEmployees">0</h2></div>
+                    <div class="card"><h3>Avg per Department</h3><h2 id="deptAvgCount">0</h2></div>
+                    <div class="card absent"><h3>Empty</h3><h2 id="deptEmptyCount">0</h2></div>
+
+                </div>
+
+                <div class="report-body">
+
+                    <div class="chart-box">
+                        <canvas id="departmentChart"></canvas>
+                    </div>
+
+                    <div class="table-box">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Head</th>
+                                    <th>Active</th>
+                                    <th>Inactive</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="departmentReportTable"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============================================
+                 EMPLOYEE DIRECTORY REPORT
+            ============================================= -->
+
+            <section class="report-panel" id="panel-directory">
+
+                <div class="filter-bar">
+
+                    <input type="text" id="directorySearch" placeholder="Search employee...">
+
+                    <select id="directoryDeptFilter">
+                        <option value="">All Departments</option>
+                    </select>
+
+                    <select id="directoryStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+
+                    <button class="export-btn" id="exportDirectoryBtn">
+                        <i class="fa-solid fa-file-export"></i> Export CSV
+                    </button>
+
+                </div>
+
+                <div class="cards">
+
+                    <div class="card"><h3>Employees</h3><h2 id="dirTotalCount">0</h2></div>
+                    <div class="card present"><h3>Active</h3><h2 id="dirActiveCount">0</h2></div>
+                    <div class="card absent"><h3>Inactive</h3><h2 id="dirInactiveCount">0</h2></div>
+                    <div class="card"><h3>Departments</h3><h2 id="dirDeptCount">0</h2></div>
+
+                </div>
+
+                <div class="report-body">
+
+                    <div class="chart-box">
+                        <canvas id="directoryChart"></canvas>
+                    </div>
+
+                    <div class="table-box">
+
+                        <table>
+
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Designation</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="directoryReportTable"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/reports.js"></script>
+
+</body>
+
+</html>

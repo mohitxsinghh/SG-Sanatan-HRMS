@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Settings | SG Sanatan HRMS</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Header -->
+            <div id="commonTopbar"></div>
+
+            <div class="settings-grid">
+
+                <!-- =========================
+                     COMPANY INFO
+                ========================== -->
+
+                <section class="settings-card">
+
+                    <div class="settings-card-header">
+
+                        <div class="settings-icon"><i class="fa-solid fa-building"></i></div>
+
+                        <div>
+                            <h2>Company Information</h2>
+                            <p>Shown on the sidebar across the whole app.</p>
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label>Company Name</label>
+                            <input type="text" id="companyName" placeholder="e.g. SG Sanatan">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Tagline</label>
+                            <input type="text" id="companyTagline" placeholder="e.g. Employees Management System">
+
+                        </div>
+
+                    </div>
+
+                    <button class="save-section-btn" id="saveCompanyBtn">
+                        <i class="fa-solid fa-check"></i> Save Company Info
+                    </button>
+
+                </section>
+
+                <!-- =========================
+                     OFFICE TIMINGS
+                ========================== -->
+
+                <section class="settings-card">
+
+                    <div class="settings-card-header">
+
+                        <div class="settings-icon"><i class="fa-solid fa-clock"></i></div>
+
+                        <div>
+                            <h2>Office Timings</h2>
+                            <p>Standard work hours drive the overtime calculation in Attendance.</p>
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label>Office Start Time</label>
+                            <input type="time" id="officeStart">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Office End Time</label>
+                            <input type="time" id="officeEnd">
+
+                        </div>
+
+                        <div class="form-group full-width">
+
+                            <label>Standard Work Hours / Day</label>
+                            <input type="number" id="workHours" min="1" max="24" step="0.5">
+
+                        </div>
+
+                    </div>
+
+                    <button class="save-section-btn" id="saveTimingsBtn">
+                        <i class="fa-solid fa-check"></i> Save Office Timings
+                    </button>
+
+                </section>
+
+                <!-- =========================
+                     THEME
+                ========================== -->
+
+                <section class="settings-card">
+
+                    <div class="settings-card-header">
+
+                        <div class="settings-icon"><i class="fa-solid fa-palette"></i></div>
+
+                        <div>
+                            <h2>Theme</h2>
+                            <p>Pick the accent color used across the whole app.</p>
+                        </div>
+
+                    </div>
+
+                    <div class="theme-swatches" id="themeSwatches">
+
+                        <button class="swatch-btn" data-theme="gold" style="--swatch:#D9A521">
+                            <span class="swatch-dot"></span> Gold
+                        </button>
+
+                        <button class="swatch-btn" data-theme="blue" style="--swatch:#2563EB">
+                            <span class="swatch-dot"></span> Blue
+                        </button>
+
+                        <button class="swatch-btn" data-theme="green" style="--swatch:#16A34A">
+                            <span class="swatch-dot"></span> Green
+                        </button>
+
+                        <button class="swatch-btn" data-theme="purple" style="--swatch:#7C3AED">
+                            <span class="swatch-dot"></span> Purple
+                        </button>
+
+                        <button class="swatch-btn" data-theme="rose" style="--swatch:#E11D48">
+                            <span class="swatch-dot"></span> Rose
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/settings.js"></script>
+
+</body>
+
+</html>

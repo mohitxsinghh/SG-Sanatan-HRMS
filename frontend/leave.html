@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Leave | SG Sanatan HRMS</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/leave.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Header -->
+            <div id="commonTopbar"></div>
+
+            <!-- Cards -->
+            <div class="cards">
+
+                <div class="card">
+
+                    <h3>Total Requests</h3>
+                    <h2 id="totalRequests">0</h2>
+
+                </div>
+
+                <div class="card pending">
+
+                    <h3>Pending</h3>
+                    <h2 id="pendingCount">0</h2>
+
+                </div>
+
+                <div class="card approved">
+
+                    <h3>Approved</h3>
+                    <h2 id="approvedCount">0</h2>
+
+                </div>
+
+                <div class="card ontoday">
+
+                    <h3>On Leave Today</h3>
+                    <h2 id="onLeaveToday">0</h2>
+
+                </div>
+
+            </div>
+
+            <!-- Toolbar -->
+
+            <div class="toolbar">
+
+                <div class="toolbar-left">
+
+                    <input
+                        type="text"
+                        id="leaveSearch"
+                        placeholder="Search employee...">
+
+                    <select id="statusFilter">
+
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- Leave Requests Table -->
+
+            <div class="table-box">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Employee</th>
+                            <th>Type</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Days</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="leaveTable">
+
+                        <!-- Dynamic rows -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <!-- Leave Balance Overview -->
+
+            <div class="section-block">
+
+                <h2>Leave Balance Overview</h2>
+
+                <div class="table-box">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Employee</th>
+                                <th>Casual</th>
+                                <th>Sick</th>
+                                <th>Earned</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="balanceTable">
+
+                            <!-- Dynamic rows -->
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- ===================================
+     APPLY / EDIT LEAVE MODAL
+    =================================== -->
+
+    <div class="modal" id="leaveModal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="modalTitle">Apply Leave</h2>
+
+                <button class="close-btn" id="closeModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="leaveForm">
+
+                <div class="form-grid">
+
+                    <div class="form-group full-width">
+
+                        <label>Employee *</label>
+
+                        <select id="leaveEmployee">
+                            <option value="">Select Employee</option>
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Leave Type *</label>
+
+                        <select id="leaveType">
+                            <option value="">Select Type</option>
+                            <option>Casual</option>
+                            <option>Sick</option>
+                            <option>Earned</option>
+                            <option>Unpaid</option>
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>&nbsp;</label>
+                        <div class="days-preview" id="daysPreview">0 day(s)</div>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>From Date *</label>
+                        <input type="date" id="leaveFrom">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>To Date *</label>
+                        <input type="date" id="leaveTo">
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label>Reason</label>
+                        <textarea id="leaveReason" rows="2" placeholder="Reason for leave"></textarea>
+
+                    </div>
+
+                </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="cancel-btn" id="cancelBtn">
+                    Cancel
+                </button>
+
+                <button type="button" class="save-btn" id="saveBtn">
+                    Submit Request
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/leave.js"></script>
+
+</body>
+
+</html>

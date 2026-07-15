@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Employees | SG Sanatan HRMS</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/employees.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Header -->
+            <div id="commonTopbar">
+
+            </div>
+
+            <!-- Cards -->
+            <div class="cards">
+
+                <div class="card">
+
+                    <h3>Total Employees</h3>
+                    <h2 id="totalEmployees">0</h2>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>Active</h3>
+                    <h2 id="activeEmployees">0</h2>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>Inactive</h3>
+                    <h2 id="inactiveEmployees">0</h2>
+
+                </div>
+
+                <div class="card">
+
+                    <h3>Departments</h3>
+                    <h2 id="departmentCount">0</h2>
+
+                </div>
+
+            </div>
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    id="searchEmployee"
+                    placeholder="Search employee..."
+                    autocomplete="off">
+
+            </div>
+
+            <!-- Employee Table -->
+
+            <div class="table-box">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Designation</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="employeeTable">
+
+                        <!-- Dynamic rows -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- ===================================
+     ADD / EDIT EMPLOYEE MODAL
+    =================================== -->
+
+    <div class="modal" id="employeeModal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2 id="modalTitle">Add Employee</h2>
+
+                <button class="close-btn" id="closeModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="employeeForm">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label>Full Name *</label>
+                        <input type="text" id="empName" placeholder="Enter full name">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Father's Name</label>
+                        <input type="text" id="empFather" placeholder="Enter father's name">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Department *</label>
+
+                        <select id="empDept">
+                            <option value="">Select Department</option>
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Designation *</label>
+                        <input type="text" id="empDesig" placeholder="Designation">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Phone *</label>
+                        <input type="text" id="empPhone" maxlength="10" placeholder="Phone Number">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Email * <small>(used to log in)</small></label>
+                        <input type="email" id="empEmail" placeholder="Email">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label id="passwordLabel">Password *</label>
+                        <input type="password" id="empPassword" placeholder="Set a login password">
+
+                    </div>
+
+                    <div class="form-group full-width">
+
+                        <label>Address</label>
+                        <textarea id="empAddress" rows="2" placeholder="Address"></textarea>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Status</label>
+
+                        <select id="empStatus">
+                            <option>Active</option>
+                            <option>Inactive</option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="cancel-btn" id="cancelBtn">
+                    Cancel
+                </button>
+
+                <button type="button" class="save-btn" id="saveBtn">
+                    Save Employee
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/employees.js"></script>
+
+</body>
+
+</html>
