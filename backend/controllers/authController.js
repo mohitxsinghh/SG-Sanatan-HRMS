@@ -149,4 +149,86 @@ async function getMe(req, res) {
 
 }
 
-module.exports = { login, getMe };
+// Lets the logged-in user (Admin or Employee) update their own name,
+// email, and/or password. Changing the password requires the current
+// password as proof - a valid JWT alone isn't enough, since tokens can
+// leak (shared screen, saved browser, etc.) and this is the one action
+// that should require re-proving identity.
+
+async function updateMe(req, res) {
+
+    try {
+
+        const Model = req.user.role === "Admin" ? Admin : Employee;
+
+        const user = await Model.findById(req.user.id);
+
+        if (!user) {
+
+            return res.status(404).json({ message: `${req.user.role} not found` });
+
+        }
+
+        const { name, email, currentPassword, newPassword } = req.body;
+
+        if (name) {
+
+            user.name = name.trim();
+
+        }
+
+        if (email) {
+
+            user.email = email.toLowerCase().trim();
+
+        }
+
+        if (newPassword) {
+
+            if (!currentPassword) {
+
+                return res.status(400).json({
+
+                    message: "Current password is required to set a new password"
+
+                });
+
+            }
+
+            const isMatch = await user.comparePassword(currentPassword);
+
+            if (!isMatch) {
+
+                return res.status(401).json({ message: "Current password is incorrect" });
+
+            }
+
+            user.password = newPassword; // pre-save hook hashes it automatically
+
+        }
+
+        await user.save();
+
+        res.json({
+
+            message: "Profile updated successfully",
+
+            user: { ...user.toJSON(), role: req.user.role }
+
+        });
+
+    } catch (error) {
+
+        if (error.code === 11000) {
+
+            return res.status(400).json({ message: "That email is already in use" });
+
+        }
+
+        res.status(400).json({ message: error.message });
+
+    }
+
+}
+
+module.exports = { login, getMe, updateMe };
