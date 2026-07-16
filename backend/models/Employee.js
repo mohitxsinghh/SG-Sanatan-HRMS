@@ -32,6 +32,15 @@ const employeeSchema = new mongoose.Schema({
         type: String
     },
 
+    // Monthly base salary - used by Payroll to calculate deductions
+    // for Absent/Half Day/Leave days. Defaults to 0 so existing
+    // employees don't fail validation until an Admin sets a real value.
+
+    salary: {
+        type: Number,
+        default: 0
+    },
+
     address: {
         type: String
     },
