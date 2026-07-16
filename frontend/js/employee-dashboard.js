@@ -66,51 +66,12 @@ function loadMonthAndRecent(recentRecords) {
 
 }
 
-// ==========================================
-// Leave Days Taken This Month + Recent Requests
-// ==========================================
-
-function loadLeaveInfo(leaves) {
-
-    const currentMonth = today.slice(0, 7);
-
-    const daysTaken = leaves
-
-        .filter(l => l.status === "Approved" &&
-
-            (l.fromDate.slice(0, 7) === currentMonth || l.toDate.slice(0, 7) === currentMonth)
-
-        )
-
-        .reduce((sum, l) => sum + l.days, 0);
-
-    document.getElementById("leaveDaysTaken").textContent = daysTaken;
-
-    const listEl = document.getElementById("recentLeaveList");
-
-    const recent = leaves.slice(0, 5);
-
-    if (recent.length === 0) {
-
-        listEl.innerHTML = `<li>No leave requests yet.</li>`;
-
-        return;
-
-    }
-
-    listEl.innerHTML = recent.map(l => `
-
-        <li>
-            <div>
-                <strong>${l.leaveType}</strong>
-                <br>
-                <small>${l.fromDate} to ${l.toDate} (${l.days} day${l.days > 1 ? "s" : ""}) - ${l.status}</small>
-            </div>
-        </li>
-
-    `).join("");
-
-}
+// NOTE: loadLeaveBalance() was removed along with leave balances
+// (pay is now deduction-based on Attendance - see the Payroll work
+// discussed earlier). The "Leave Days Remaining" stat card + "My
+// Leave Balance" list in employee-dashboard.html still need to be
+// replaced with a "This Month's Deduction" card once the Payroll
+// endpoint is built - that part is still pending.
 
 // ==========================================
 // Next Holiday
@@ -153,6 +114,33 @@ function loadNextHoliday(holidays) {
 }
 
 // ==========================================
+// Company Notice Board (read-only - the backend already only
+// returns non-expired notices for the Employee role)
+// ==========================================
+
+function loadNotices(notices) {
+
+    const noticeList = document.getElementById("noticeList");
+
+    if (!noticeList) return;
+
+    if (notices.length === 0) {
+
+        noticeList.innerHTML = "<li>No notices posted yet.</li>";
+
+        return;
+
+    }
+
+    noticeList.innerHTML = notices.map(n => `
+
+        <li>📢 ${n.message}</li>
+
+    `).join("");
+
+}
+
+// ==========================================
 // Initial Load
 // ==========================================
 
@@ -167,18 +155,18 @@ async function init() {
         monthStart.setDate(monthStart.getDate() - 30);
         const from = monthStart.toISOString().split("T")[0];
 
-        const [recentRecords, leaves, holidays] = await Promise.all([
+        const [recentRecords, holidays, notices] = await Promise.all([
 
             apiFetch(`/attendance?from=${from}&to=${today}`),
-            apiFetch("/leave"),
-            apiFetch("/holidays")
+            apiFetch("/holidays"),
+            apiFetch("/notices")
 
         ]);
 
         loadTodayStatus(recentRecords);
         loadMonthAndRecent(recentRecords);
-        loadLeaveInfo(leaves);
         loadNextHoliday(holidays);
+        loadNotices(notices);
 
     } catch (error) {
 

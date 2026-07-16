@@ -159,6 +159,210 @@ function loadAttendanceChart() {
 }
 
 // ==========================================
+// Company Notice Board (Admin: add / edit / delete)
+// ==========================================
+
+const noticeList = document.getElementById("noticeList");
+const noticeForm = document.getElementById("noticeForm");
+const noticeMessage = document.getElementById("noticeMessage");
+const noticeExpiry = document.getElementById("noticeExpiry");
+const noticeEditId = document.getElementById("noticeEditId");
+const addNoticeBtn = document.getElementById("addNoticeBtn");
+const noticeSaveBtn = document.getElementById("noticeSaveBtn");
+const noticeCancelBtn = document.getElementById("noticeCancelBtn");
+
+const todayStr = new Date().toISOString().split("T")[0];
+
+let notices = [];
+
+function openNoticeForm(notice = null) {
+
+    noticeForm.style.display = "block";
+
+    if (notice) {
+
+        noticeEditId.value = notice._id;
+        noticeMessage.value = notice.message;
+        noticeExpiry.value = notice.expiryDate;
+        noticeSaveBtn.textContent = "Update";
+
+    } else {
+
+        noticeEditId.value = "";
+        noticeMessage.value = "";
+        noticeExpiry.value = "";
+        noticeSaveBtn.textContent = "Save";
+
+    }
+
+    noticeMessage.focus();
+
+}
+
+function closeNoticeForm() {
+
+    noticeForm.style.display = "none";
+
+    noticeEditId.value = "";
+    noticeMessage.value = "";
+    noticeExpiry.value = "";
+
+}
+
+addNoticeBtn.addEventListener("click", () => openNoticeForm());
+noticeCancelBtn.addEventListener("click", closeNoticeForm);
+
+noticeSaveBtn.addEventListener("click", async () => {
+
+    const message = noticeMessage.value.trim();
+    const expiryDate = noticeExpiry.value;
+
+    if (!message) {
+
+        alert("Please enter a notice message.");
+        noticeMessage.focus();
+        return;
+
+    }
+
+    if (!expiryDate) {
+
+        alert("Please choose an expiry date.");
+        noticeExpiry.focus();
+        return;
+
+    }
+
+    const editId = noticeEditId.value;
+
+    noticeSaveBtn.disabled = true;
+
+    try {
+
+        if (editId) {
+
+            await apiFetch(`/notices/${editId}`, {
+
+                method: "PUT",
+                body: JSON.stringify({ message, expiryDate })
+
+            });
+
+        } else {
+
+            await apiFetch("/notices", {
+
+                method: "POST",
+                body: JSON.stringify({ message, expiryDate })
+
+            });
+
+            addSystemLog("Notice Posted", "A new notice was added to the board.", "info");
+
+        }
+
+        closeNoticeForm();
+
+        await loadNotices();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    } finally {
+
+        noticeSaveBtn.disabled = false;
+
+    }
+
+});
+
+async function deleteNotice(id) {
+
+    const confirmDelete = confirm("Delete this notice? This cannot be undone.");
+
+    if (!confirmDelete) return;
+
+    try {
+
+        await apiFetch(`/notices/${id}`, { method: "DELETE" });
+
+        await loadNotices();
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+
+}
+
+window.deleteNotice = deleteNotice;
+
+function editNotice(id) {
+
+    const notice = notices.find(n => n._id === id);
+
+    if (notice) openNoticeForm(notice);
+
+}
+
+window.editNotice = editNotice;
+
+function renderNotices() {
+
+    if (notices.length === 0) {
+
+        noticeList.innerHTML = "<li>No notices posted yet.</li>";
+
+        return;
+
+    }
+
+    noticeList.innerHTML = notices.map(n => `
+
+        <li class="${n.expiryDate < todayStr ? "notice-expired" : ""}">
+
+            <div class="notice-text">
+                📢 ${n.message}
+                <span class="notice-expiry-tag">Expires ${n.expiryDate}${n.expiryDate < todayStr ? " (expired)" : ""}</span>
+            </div>
+
+            <div class="notice-actions">
+
+                <button class="notice-edit-btn" onclick="editNotice('${n._id}')" title="Edit">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+
+                <button class="notice-delete-btn" onclick="deleteNotice('${n._id}')" title="Delete">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+
+            </div>
+
+        </li>
+
+    `).join("");
+
+}
+
+async function loadNotices() {
+
+    try {
+
+        notices = await apiFetch("/notices");
+
+        renderNotices();
+
+    } catch (error) {
+
+        noticeList.innerHTML = `<li>Failed to load notices: ${error.message}</li>`;
+
+    }
+
+}
+
+// ==========================================
 // Recent Activity
 // (still local per-browser - this is just a UI convenience log, not
 // core business data, so it doesn't need to be backend-connected)
@@ -220,6 +424,7 @@ async function init() {
         loadAttendanceOverview();
         loadAttendanceChart();
         loadActivities();
+        loadNotices();
 
     } catch (error) {
 
