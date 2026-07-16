@@ -22,7 +22,7 @@ const attendanceRoutes = require("./routes/attendanceRoutes");
 const leaveRoutes = require("./routes/leaveRoutes");
 const holidayRoutes = require("./routes/holidayRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
-const payrollRoutes = require("./routes/payrollRoutes");
+const noticeRoutes = require("./routes/noticeRoutes");
 
 // Middleware
 app.use(cors());
@@ -61,7 +61,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leave", leaveRoutes);
 app.use("/api/holidays", holidayRoutes);
 app.use("/api/settings", settingsRoutes);
-app.use("/api/payroll", payrollRoutes);
+app.use("/api/notices", noticeRoutes);
 
 connectDB();
 
