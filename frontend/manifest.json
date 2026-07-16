@@ -1,0 +1,32 @@
+{
+  "name": "SG Sanatan - Employees Management System",
+  "short_name": "SG Sanatan HRMS",
+  "description": "Attendance, leave, payroll and employee management for SG Sanatan.",
+  "start_url": "/login.html",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#14161F",
+  "theme_color": "#14161F",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline | SG Sanatan HRMS</title>
+    <link rel="icon" href="assets/icons/favicon-32.png">
+    <style>
+        *{ margin:0; padding:0; box-sizing:border-box; }
+        body{
+            font-family:"Inter", sans-serif;
+            background:#14161F;
+            color:#fff;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+            text-align:center;
+        }
+        .box{ max-width:380px; }
+        .icon{
+            width:64px; height:64px;
+            border-radius:50%;
+            background:#1E212E;
+            display:flex; align-items:center; justify-content:center;
+            margin:0 auto 20px;
+            box-shadow:0 0 0 3px #D9A521;
+            font-size:26px;
+        }
+        h1{ font-size:20px; margin-bottom:10px; }
+        p{ color:#9AA1B2; font-size:14px; line-height:1.5; margin-bottom:24px; }
+        button{
+            background:#D9A521;
+            color:#231A03;
+            border:none;
+            padding:12px 24px;
+            border-radius:10px;
+            font-weight:700;
+            font-size:14.5px;
+            cursor:pointer;
+        }
+        button:hover{ background:#B3860F; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="icon">📡</div>
+        <h1>You're offline</h1>
+        <p>SG Sanatan HRMS couldn't reach the server. Check your connection and try again - any page you've already opened recently may still be available from cache.</p>
+        <button onclick="window.location.reload()">Retry</button>
+    </div>
+</body>
+</html>
