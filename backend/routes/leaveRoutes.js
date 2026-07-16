@@ -6,15 +6,16 @@ const Leave = require("../models/Leave");
 const Attendance = require("../models/Attendance");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
+// Leave balance tracking has been removed. Leave requests now exist
+// purely for approval/scheduling records - pay is determined entirely
+// by what Attendance shows for each day (see routes/payrollRoutes.js).
+// Present = full pay, Half Day = half deduction, Absent/Leave/unmarked
+// = full-day deduction. So an approved leave still costs the employee
+// a full day's pay, same as being marked Absent.
+
 // Employees can view/apply for their OWN leave and cancel their own
 // pending requests. Approving/rejecting, and managing anyone else's
 // requests, stays Admin-only - enforced per-route below.
-//
-// NOTE: There is no leave balance/quota system. Leave is purely a
-// scheduling record now - approving it does NOT protect an employee's
-// pay. Payroll (see payrollRoutes.js) deducts for Absent, Half Day,
-// AND Leave days alike, since Present is the only status that counts
-// as a fully worked, fully paid day.
 
 // -------------------------------------------
 // Helpers
@@ -217,9 +218,9 @@ router.put("/:id", protect, async (req, res) => {
 
 // -------------------------------------------
 // APPROVE
-// No balance check anymore - just flips status and writes a "Leave"
-// Attendance record for every date in the range (which, per the new
-// payroll policy, still gets deducted just like Absent).
+// No balance to check anymore - just flips status and writes a
+// "Leave" Attendance record for every date in the range, which is
+// what makes Payroll deduct a full day's pay for each of those dates.
 // -------------------------------------------
 
 router.put("/:id/approve", protect, authorizeRoles("Admin"), async (req, res) => {
@@ -297,7 +298,8 @@ router.put("/:id/approve", protect, authorizeRoles("Admin"), async (req, res) =>
 });
 
 // -------------------------------------------
-// REJECT (no side-effects)
+// REJECT (no Attendance side-effect - the days stay whatever they
+// already were, e.g. Absent/unmarked)
 // -------------------------------------------
 
 router.put("/:id/reject", protect, authorizeRoles("Admin"), async (req, res) => {
@@ -343,8 +345,8 @@ router.put("/:id/reject", protect, authorizeRoles("Admin"), async (req, res) => 
 // -------------------------------------------
 // DELETE
 // If the request was Approved, removes only the "Leave" Attendance
-// records this request created - won't touch dates that were since
-// edited manually. No balance to reverse anymore.
+// records this request created - it won't touch dates that were
+// since edited manually. No balance to reverse anymore.
 // -------------------------------------------
 
 router.delete("/:id", protect, async (req, res) => {
