@@ -28,17 +28,19 @@ const employeeSchema = new mongoose.Schema({
         type: String
     },
 
-    father: {
-        type: String
-    },
-
-    // Monthly base salary - used by Payroll to calculate deductions
-    // for Absent/Half Day/Leave days. Defaults to 0 so existing
-    // employees don't fail validation until an Admin sets a real value.
+    // Monthly salary used by the Payroll module to compute deductions
+    // (see routes/payrollRoutes.js). Present = full pay for that day,
+    // Half Day = half-day deduction, Absent/Leave/unmarked = full-day
+    // deduction. Daily rate = salary ÷ working days in that month
+    // (Sundays + Holidays excluded).
 
     salary: {
         type: Number,
         default: 0
+    },
+
+    father: {
+        type: String
     },
 
     address: {
