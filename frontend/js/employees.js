@@ -9,6 +9,15 @@ const session = requireRole(["Admin"]);
 
 let employees = [];
 
+// Departments, cached the same way - fetched from the real backend
+// (previously this page called common.js's getDepartments(), a
+// leftover from before the Departments module was backend-connected,
+// which seeds 6 hardcoded defaults into localStorage. That's why the
+// "Departments" card and dropdown never matched the real count on
+// departments.html - fixed by fetching /api/departments here too.)
+
+let departmentsCache = [];
+
 // Edit Mode
 let editMode = false;
 let editEmployeeId = null;
@@ -86,7 +95,7 @@ function showToast(title, message, isError = false) {
 // Open Add Employee Modal
 // ==========================
 
-document.addEventListener("click", function (e) {
+document.addEventListener("click", async function (e) {
 
     const addBtn = e.target.closest("#addEmployeeBtn");
 
@@ -102,6 +111,7 @@ document.addEventListener("click", function (e) {
 
     clearForm();
 
+    await loadDepartmentsCache();
     populateDepartmentDropdown();
 
     employeeModal.style.display = "flex";
@@ -206,19 +216,31 @@ function fillEmployeeForm(employee) {
 
 // ==========================
 // Department Dropdown
-// (Departments module isn't backend-connected yet, so this still
-// reads from local storage for now - that's the next module we'll migrate.)
+// (reads from the real /departments API - departments.html manages
+// the actual list, this just displays whatever it currently has)
 // ==========================
 
-function populateDepartmentDropdown() {
+async function loadDepartmentsCache() {
 
-    const departments = typeof getDepartments === "function" ? getDepartments() : [];
+    try {
+
+        departmentsCache = await apiFetch("/departments");
+
+    } catch (error) {
+
+        departmentsCache = [];
+
+    }
+
+}
+
+function populateDepartmentDropdown() {
 
     const currentValue = empDept.value;
 
     empDept.innerHTML = `<option value="">Select Department</option>`;
 
-    departments.forEach(dept => {
+    departmentsCache.forEach(dept => {
 
         empDept.innerHTML += `<option value="${dept.name}">${dept.name}</option>`;
 
@@ -242,8 +264,7 @@ function updateDashboard() {
     inactiveEmployees.textContent =
         employees.filter(emp => emp.status === "Inactive").length;
 
-    departmentCount.textContent =
-        typeof getDepartments === "function" ? getDepartments().length : 0;
+    departmentCount.textContent = departmentsCache.length;
 
 }
 
@@ -439,7 +460,7 @@ function displayEmployees(list = employees) {
 // Edit Employee
 // ==========================
 
-function editEmployee(id) {
+async function editEmployee(id) {
 
     const employee = employees.find(emp => emp._id === id);
 
@@ -448,6 +469,7 @@ function editEmployee(id) {
     editMode = true;
     editEmployeeId = id;
 
+    await loadDepartmentsCache();
     populateDepartmentDropdown();
     fillEmployeeForm(employee);
 
@@ -516,4 +538,11 @@ searchEmployee.addEventListener("keyup", function () {
 // Initial Load
 // ==========================
 
-loadEmployees();
+async function init() {
+
+    await loadDepartmentsCache();
+    await loadEmployees();
+
+}
+
+init();
