@@ -90,11 +90,6 @@ const pageDetails = {
 
     },
 
-    "payroll.html": {
-        title: "Payroll",
-        subtitle: "Monthly salary and deductions"
-    },
-
     "settings.html": {
         title: "Settings",
         subtitle: "Application settings"
@@ -169,6 +164,10 @@ if(topbar){
     <div class="topbar">
 
         <div class="topbar-left">
+
+            <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Open menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
 
             <h1 class="page-title">
 
@@ -611,3 +610,68 @@ applyGlobalSettings();
 // Re-apply instantly if Settings are changed in this tab (no reload needed)
 
 window.addEventListener("settingsUpdated", applyGlobalSettings);
+
+// ==========================================
+// MOBILE SIDEBAR DRAWER
+// The sidebar <aside> itself is static markup already on every page -
+// this just toggles an "open" class on it (see css/mobile.css) and
+// shows/hides a backdrop. One overlay div is created once and reused.
+// ==========================================
+
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+const sidebarEl = document.querySelector(".sidebar");
+
+let sidebarOverlay = document.getElementById("sidebarOverlay");
+
+if (!sidebarOverlay) {
+
+    sidebarOverlay = document.createElement("div");
+    sidebarOverlay.id = "sidebarOverlay";
+    sidebarOverlay.className = "sidebar-overlay";
+
+    document.body.appendChild(sidebarOverlay);
+
+}
+
+function openSidebar() {
+
+    sidebarEl?.classList.add("open");
+    sidebarOverlay.classList.add("show");
+
+}
+
+function closeSidebar() {
+
+    sidebarEl?.classList.remove("open");
+    sidebarOverlay.classList.remove("show");
+
+}
+
+mobileMenuBtn?.addEventListener("click", (e) => {
+
+    e.stopPropagation();
+
+    sidebarEl?.classList.contains("open") ? closeSidebar() : openSidebar();
+
+});
+
+sidebarOverlay.addEventListener("click", closeSidebar);
+
+// Close the drawer automatically after tapping a nav link, so the
+// next page doesn't load with the drawer still open.
+
+sidebarEl?.addEventListener("click", (e) => {
+
+    if (e.target.closest("a")) closeSidebar();
+
+});
+
+// If the window is resized past the mobile breakpoint (e.g. rotating
+// a tablet, or a desktop browser being resized), make sure the drawer
+// state doesn't get stuck open behind the now-static sidebar.
+
+window.addEventListener("resize", () => {
+
+    if (window.innerWidth > 900) closeSidebar();
+
+});
