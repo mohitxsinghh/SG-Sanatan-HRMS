@@ -520,3 +520,88 @@ function saveActivities(activities) {
     );
 
 }
+
+// ==========================================
+// PWA - SERVICE WORKER REGISTRATION
+// ==========================================
+// Runs on every page since common.js is loaded everywhere. Service
+// workers require HTTPS (localhost is exempted for dev) - registration
+// just silently no-ops on unsupported browsers or plain-HTTP hosting.
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+        navigator.serviceWorker.register("/sw.js")
+
+            .then((registration) => {
+
+                // If a new service worker takes over (after a deploy),
+                // do a one-time reload so the user isn't stuck running
+                // stale JS against a newer backend/API contract.
+
+                registration.addEventListener("updatefound", () => {
+
+                    const newWorker = registration.installing;
+
+                    newWorker?.addEventListener("statechange", () => {
+
+                        if (newWorker.state === "activated" && navigator.serviceWorker.controller) {
+
+                            window.location.reload();
+
+                        }
+
+                    });
+
+                });
+
+            })
+
+            .catch((error) => {
+
+                console.warn("Service worker registration failed:", error.message);
+
+            });
+
+    });
+
+}
+
+// ==========================================
+// PWA - INSTALL PROMPT
+// ==========================================
+// Chrome/Edge suppress the automatic install banner once a page calls
+// preventDefault() on this event, and hand control to us instead - so
+// any page can show its own "Install App" button by calling
+// window.promptInstall() from a click handler.
+
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (event) => {
+
+    event.preventDefault();
+
+    deferredInstallPrompt = event;
+
+});
+
+window.promptInstall = async function () {
+
+    if (!deferredInstallPrompt) return { outcome: "unavailable" };
+
+    deferredInstallPrompt.prompt();
+
+    const choice = await deferredInstallPrompt.userChoice;
+
+    deferredInstallPrompt = null;
+
+    return choice;
+
+};
+
+window.addEventListener("appinstalled", () => {
+
+    deferredInstallPrompt = null;
+
+});
