@@ -17,16 +17,6 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#14161F">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
-    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SG Sanatan HRMS">
-    <meta name="mobile-web-app-capable" content="yes">
-
     <title>Dashboard | SG Sanatan HRMS</title>
 
     <link rel="stylesheet" href="css/style.css">
@@ -307,17 +297,37 @@
 
                 <div class="dashboard-section">
 
-                    <h2>Company Notice Board</h2>
+                    <div class="notice-header">
 
-                    <ul class="notice-list">
+                        <h2>Company Notice Board</h2>
 
-                        <li>📢 Independence Day Holiday - 15 August</li>
+                        <button class="notice-add-btn" id="addNoticeBtn">
+                            <i class="fa-solid fa-plus"></i> Add Notice
+                        </button>
 
-                        <li>📢 Salary will be credited on the 1st of every month.</li>
+                    </div>
 
-                        <li>📢 Monthly Team Meeting - 15 July at 11:00 AM.</li>
+                    <form class="notice-form" id="noticeForm" style="display:none;">
 
-                        <li>📢 Keep employee records updated regularly.</li>
+                        <input type="hidden" id="noticeEditId">
+
+                        <textarea id="noticeMessage" rows="2" placeholder="Notice message"></textarea>
+
+                        <div class="notice-form-row">
+
+                            <label>Expires on</label>
+                            <input type="date" id="noticeExpiry">
+
+                            <button type="button" class="notice-save-btn" id="noticeSaveBtn">Save</button>
+                            <button type="button" class="notice-cancel-btn" id="noticeCancelBtn">Cancel</button>
+
+                        </div>
+
+                    </form>
+
+                    <ul class="notice-list" id="noticeList">
+
+                        <li>Loading notices...</li>
 
                     </ul>
 
