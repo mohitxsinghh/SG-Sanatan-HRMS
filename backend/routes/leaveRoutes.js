@@ -3,14 +3,18 @@ const express = require("express");
 const router = express.Router();
 
 const Leave = require("../models/Leave");
-const LeaveBalance = require("../models/LeaveBalance");
-const Employee = require("../models/Employee");
 const Attendance = require("../models/Attendance");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 // Employees can view/apply for their OWN leave and cancel their own
 // pending requests. Approving/rejecting, and managing anyone else's
 // requests, stays Admin-only - enforced per-route below.
+//
+// NOTE: There is no leave balance/quota system. Leave is purely a
+// scheduling record now - approving it does NOT protect an employee's
+// pay. Payroll (see payrollRoutes.js) deducts for Absent, Half Day,
+// AND Leave days alike, since Present is the only status that counts
+// as a fully worked, fully paid day.
 
 // -------------------------------------------
 // Helpers
@@ -50,76 +54,6 @@ function getDateRange(fromDate, toDate) {
     return dates;
 
 }
-
-async function getOrCreateBalance(employeeId) {
-
-    let balance = await LeaveBalance.findOne({ employee: employeeId });
-
-    if (!balance) {
-
-        balance = await LeaveBalance.create({ employee: employeeId });
-
-    }
-
-    return balance;
-
-}
-
-// -------------------------------------------
-// GET Leave Balance Overview (all employees, merged with defaults
-// for anyone who doesn't have a balance document yet)
-// -------------------------------------------
-
-router.get("/balances/all", protect, async (req, res) => {
-
-    try {
-
-        const employees = req.user.role === "Employee"
-
-            ? await Employee.find({ _id: req.user.id })
-
-            : await Employee.find();
-
-        const balances = await LeaveBalance.find();
-
-        const balanceMap = {};
-
-        balances.forEach(b => {
-
-            balanceMap[b.employee.toString()] = b;
-
-        });
-
-        const result = employees.map(emp => {
-
-            const b = balanceMap[emp._id.toString()];
-
-            return {
-
-                employee: {
-                    _id: emp._id,
-                    name: emp.name,
-                    department: emp.department,
-                    employeeId: emp.employeeId
-                },
-
-                Casual: b ? { quota: b.Casual.quota, used: b.Casual.used } : { quota: 12, used: 0 },
-                Sick:   b ? { quota: b.Sick.quota, used: b.Sick.used }   : { quota: 10, used: 0 },
-                Earned: b ? { quota: b.Earned.quota, used: b.Earned.used } : { quota: 15, used: 0 }
-
-            };
-
-        });
-
-        res.json(result);
-
-    } catch (error) {
-
-        res.status(500).json({ message: error.message });
-
-    }
-
-});
 
 // -------------------------------------------
 // GET All Leave Requests
@@ -212,9 +146,7 @@ router.post("/", protect, async (req, res) => {
 });
 
 // -------------------------------------------
-// UPDATE Leave Request (only while Pending - approving/rejecting
-// changes the balance/attendance side-effects, so editing after that
-// point would desync them, same rule as the old version)
+// UPDATE Leave Request (only while Pending)
 // -------------------------------------------
 
 router.put("/:id", protect, async (req, res) => {
@@ -285,8 +217,9 @@ router.put("/:id", protect, async (req, res) => {
 
 // -------------------------------------------
 // APPROVE
-// Checks balance (skipped for Unpaid), deducts it, then writes a
-// "Leave" Attendance record for every date in the range.
+// No balance check anymore - just flips status and writes a "Leave"
+// Attendance record for every date in the range (which, per the new
+// payroll policy, still gets deducted just like Absent).
 // -------------------------------------------
 
 router.put("/:id/approve", protect, authorizeRoles("Admin"), async (req, res) => {
@@ -304,32 +237,6 @@ router.put("/:id/approve", protect, authorizeRoles("Admin"), async (req, res) =>
         if (leave.status !== "Pending") {
 
             return res.status(400).json({ message: "Only pending requests can be approved" });
-
-        }
-
-        if (leave.leaveType !== "Unpaid") {
-
-            const balance = await getOrCreateBalance(leave.employee);
-
-            const typeBalance = balance[leave.leaveType];
-
-            const remaining = typeBalance.quota - typeBalance.used;
-
-            if (leave.days > remaining) {
-
-                return res.status(400).json({
-
-                    message: `Insufficient ${leave.leaveType} leave balance. Only ${remaining} day(s) remaining.`
-
-                });
-
-            }
-
-            typeBalance.used += leave.days;
-
-            balance.markModified(leave.leaveType);
-
-            await balance.save();
 
         }
 
@@ -390,7 +297,7 @@ router.put("/:id/approve", protect, authorizeRoles("Admin"), async (req, res) =>
 });
 
 // -------------------------------------------
-// REJECT (no balance/attendance side-effects)
+// REJECT (no side-effects)
 // -------------------------------------------
 
 router.put("/:id/reject", protect, authorizeRoles("Admin"), async (req, res) => {
@@ -435,9 +342,9 @@ router.put("/:id/reject", protect, authorizeRoles("Admin"), async (req, res) => 
 
 // -------------------------------------------
 // DELETE
-// If the request was Approved, reverses the balance deduction and
-// removes only the "Leave" Attendance records this request created -
-// it won't touch dates that were since edited manually.
+// If the request was Approved, removes only the "Leave" Attendance
+// records this request created - won't touch dates that were since
+// edited manually. No balance to reverse anymore.
 // -------------------------------------------
 
 router.delete("/:id", protect, async (req, res) => {
@@ -473,24 +380,6 @@ router.delete("/:id", protect, async (req, res) => {
         }
 
         if (leave.status === "Approved") {
-
-            if (leave.leaveType !== "Unpaid") {
-
-                const balance = await LeaveBalance.findOne({ employee: leave.employee });
-
-                if (balance) {
-
-                    const typeBalance = balance[leave.leaveType];
-
-                    typeBalance.used = Math.max(0, typeBalance.used - leave.days);
-
-                    balance.markModified(leave.leaveType);
-
-                    await balance.save();
-
-                }
-
-            }
 
             const dates = getDateRange(leave.fromDate, leave.toDate);
 
