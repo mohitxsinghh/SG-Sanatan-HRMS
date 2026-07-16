@@ -90,6 +90,11 @@ const pageDetails = {
 
     },
 
+    "payroll.html": {
+        title: "Payroll",
+        subtitle: "Monthly salary and deductions"
+    },
+
     "settings.html": {
         title: "Settings",
         subtitle: "Application settings"

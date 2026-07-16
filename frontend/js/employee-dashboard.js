@@ -67,37 +67,44 @@ function loadMonthAndRecent(recentRecords) {
 }
 
 // ==========================================
-// Leave Balance
+// Leave Days Taken This Month + Recent Requests
 // ==========================================
 
-function loadLeaveBalance(balances) {
+function loadLeaveInfo(leaves) {
 
-    const myBalance = balances[0]; // backend already scopes this to "self" for Employees
+    const currentMonth = today.slice(0, 7);
 
-    const listEl = document.getElementById("leaveBalanceList");
+    const daysTaken = leaves
 
-    if (!myBalance) {
+        .filter(l => l.status === "Approved" &&
 
-        document.getElementById("leaveDaysLeft").textContent = "0";
-        listEl.innerHTML = `<li>No balance information yet.</li>`;
+            (l.fromDate.slice(0, 7) === currentMonth || l.toDate.slice(0, 7) === currentMonth)
+
+        )
+
+        .reduce((sum, l) => sum + l.days, 0);
+
+    document.getElementById("leaveDaysTaken").textContent = daysTaken;
+
+    const listEl = document.getElementById("recentLeaveList");
+
+    const recent = leaves.slice(0, 5);
+
+    if (recent.length === 0) {
+
+        listEl.innerHTML = `<li>No leave requests yet.</li>`;
 
         return;
 
     }
 
-    const types = ["Casual", "Sick", "Earned"];
-
-    const remaining = types.reduce((sum, type) => sum + Math.max(0, myBalance[type].quota - myBalance[type].used), 0);
-
-    document.getElementById("leaveDaysLeft").textContent = remaining;
-
-    listEl.innerHTML = types.map(type => `
+    listEl.innerHTML = recent.map(l => `
 
         <li>
             <div>
-                <strong>${type}</strong>
+                <strong>${l.leaveType}</strong>
                 <br>
-                <small>${myBalance[type].used} of ${myBalance[type].quota} used</small>
+                <small>${l.fromDate} to ${l.toDate} (${l.days} day${l.days > 1 ? "s" : ""}) - ${l.status}</small>
             </div>
         </li>
 
@@ -160,17 +167,17 @@ async function init() {
         monthStart.setDate(monthStart.getDate() - 30);
         const from = monthStart.toISOString().split("T")[0];
 
-        const [recentRecords, balances, holidays] = await Promise.all([
+        const [recentRecords, leaves, holidays] = await Promise.all([
 
             apiFetch(`/attendance?from=${from}&to=${today}`),
-            apiFetch("/leave/balances/all"),
+            apiFetch("/leave"),
             apiFetch("/holidays")
 
         ]);
 
         loadTodayStatus(recentRecords);
         loadMonthAndRecent(recentRecords);
-        loadLeaveBalance(balances);
+        loadLeaveInfo(leaves);
         loadNextHoliday(holidays);
 
     } catch (error) {

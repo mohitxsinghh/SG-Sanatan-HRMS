@@ -9,11 +9,6 @@ const session = requireRole(["Admin"]);
 
 let employees = [];
 
-// Departments, cached the same way - the dropdown and the "Departments"
-// stat card both read from this instead of hitting the API every time.
-
-let departmentsCache = [];
-
 // Edit Mode
 let editMode = false;
 let editEmployeeId = null;
@@ -52,6 +47,7 @@ const empPassword = document.getElementById("empPassword");
 const passwordLabel = document.getElementById("passwordLabel");
 const empAddress = document.getElementById("empAddress");
 const empStatus = document.getElementById("empStatus");
+const empSalary = document.getElementById("empSalary");
 
 // ==========================
 // Toast
@@ -90,7 +86,7 @@ function showToast(title, message, isError = false) {
 // Open Add Employee Modal
 // ==========================
 
-document.addEventListener("click", async function (e) {
+document.addEventListener("click", function (e) {
 
     const addBtn = e.target.closest("#addEmployeeBtn");
 
@@ -106,7 +102,6 @@ document.addEventListener("click", async function (e) {
 
     clearForm();
 
-    await loadDepartmentsCache();
     populateDepartmentDropdown();
 
     employeeModal.style.display = "flex";
@@ -170,7 +165,8 @@ function getEmployeeFormData() {
         phone: empPhone.value.trim(),
         email: empEmail.value.trim(),
         address: empAddress.value.trim(),
-        status: empStatus.value
+        status: empStatus.value,
+        salary: Number(empSalary.value) || 0
 
     };
 
@@ -202,6 +198,7 @@ function fillEmployeeForm(employee) {
     empEmail.value = employee.email || "";
     empAddress.value = employee.address || "";
     empStatus.value = employee.status || "Active";
+    empSalary.value = employee.salary || "";
 
     empPassword.value = "";
 
@@ -209,31 +206,19 @@ function fillEmployeeForm(employee) {
 
 // ==========================
 // Department Dropdown
-// (now reads from the real /departments API - departments.html manages
-// the actual list, this just displays whatever it currently has)
+// (Departments module isn't backend-connected yet, so this still
+// reads from local storage for now - that's the next module we'll migrate.)
 // ==========================
 
-async function loadDepartmentsCache() {
-
-    try {
-
-        departmentsCache = await apiFetch("/departments");
-
-    } catch (error) {
-
-        departmentsCache = [];
-
-    }
-
-}
-
 function populateDepartmentDropdown() {
+
+    const departments = typeof getDepartments === "function" ? getDepartments() : [];
 
     const currentValue = empDept.value;
 
     empDept.innerHTML = `<option value="">Select Department</option>`;
 
-    departmentsCache.forEach(dept => {
+    departments.forEach(dept => {
 
         empDept.innerHTML += `<option value="${dept.name}">${dept.name}</option>`;
 
@@ -257,7 +242,8 @@ function updateDashboard() {
     inactiveEmployees.textContent =
         employees.filter(emp => emp.status === "Inactive").length;
 
-    departmentCount.textContent = departmentsCache.length;
+    departmentCount.textContent =
+        typeof getDepartments === "function" ? getDepartments().length : 0;
 
 }
 
@@ -453,7 +439,7 @@ function displayEmployees(list = employees) {
 // Edit Employee
 // ==========================
 
-async function editEmployee(id) {
+function editEmployee(id) {
 
     const employee = employees.find(emp => emp._id === id);
 
@@ -462,7 +448,6 @@ async function editEmployee(id) {
     editMode = true;
     editEmployeeId = id;
 
-    await loadDepartmentsCache();
     populateDepartmentDropdown();
     fillEmployeeForm(employee);
 
@@ -531,11 +516,4 @@ searchEmployee.addEventListener("keyup", function () {
 // Initial Load
 // ==========================
 
-async function init() {
-
-    await loadDepartmentsCache();
-    await loadEmployees();
-
-}
-
-init();
+loadEmployees();

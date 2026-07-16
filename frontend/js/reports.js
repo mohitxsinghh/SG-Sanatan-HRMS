@@ -132,7 +132,7 @@ async function loadAttendanceReport() {
 
     const table = document.getElementById("attendanceReportTable");
 
-    table.innerHTML = `<tr><td colspan="7">Loading...</td></tr>`;
+    table.innerHTML = `<tr><td colspan="8">Loading...</td></tr>`;
 
     try {
 
@@ -160,6 +160,7 @@ async function loadAttendanceReport() {
 
                 byEmployee[empId] = {
 
+                    empId,
                     name: r.employee.name,
                     department: r.employee.department,
                     Present: 0,
@@ -178,6 +179,36 @@ async function loadAttendanceReport() {
         });
 
         const rows = Object.values(byEmployee);
+
+        // Payable Salary only makes sense for a single calendar month
+        // (payroll's "working days" concept is inherently monthly). If
+        // the selected range spans more than one month, show "-" instead.
+
+        const isSingleMonth = from.slice(0, 7) === to.slice(0, 7);
+
+        if (isSingleMonth) {
+
+            try {
+
+                const payrollData = await apiFetch(`/payroll?month=${from.slice(0, 7)}`);
+
+                const payMap = {};
+
+                payrollData.results.forEach(r => { payMap[r.employee._id] = r.netPayable; });
+
+                rows.forEach(r => { r.payableSalary = payMap[r.empId] ?? null; });
+
+            } catch (payrollError) {
+
+                rows.forEach(r => { r.payableSalary = null; });
+
+            }
+
+        } else {
+
+            rows.forEach(r => { r.payableSalary = null; });
+
+        }
 
         currentAttendanceRows = rows;
 
@@ -228,13 +259,15 @@ async function loadAttendanceReport() {
 
         if (rows.length === 0) {
 
-            table.innerHTML = `<tr><td colspan="7" class="empty">No records in this range.</td></tr>`;
+            table.innerHTML = `<tr><td colspan="8" class="empty">No records in this range.</td></tr>`;
 
         } else {
 
             table.innerHTML = rows.map(r => {
 
                 const percent = Math.round(((r.Present + r["Half Day"] * 0.5) / r.total) * 100);
+
+                const payableText = r.payableSalary === null ? "-" : `₹${Number(r.payableSalary).toLocaleString("en-IN")}`;
 
                 return `
                 <tr>
@@ -245,6 +278,7 @@ async function loadAttendanceReport() {
                     <td>${r["Half Day"]}</td>
                     <td>${r.Leave}</td>
                     <td>${percent}%</td>
+                    <td>${payableText}</td>
                 </tr>
                 `;
 
@@ -254,7 +288,7 @@ async function loadAttendanceReport() {
 
     } catch (error) {
 
-        table.innerHTML = `<tr><td colspan="7">Failed to load: ${error.message}</td></tr>`;
+        table.innerHTML = `<tr><td colspan="8">Failed to load: ${error.message}</td></tr>`;
 
     }
 
@@ -284,14 +318,19 @@ document.getElementById("exportAttnBtn").addEventListener("click", () => {
 
         const percent = Math.round(((r.Present + r["Half Day"] * 0.5) / r.total) * 100);
 
-        return [r.name, r.department, r.Present, r.Absent, r["Half Day"], r.Leave, `${percent}%`];
+        return [
+
+            r.name, r.department, r.Present, r.Absent, r["Half Day"], r.Leave, `${percent}%`,
+            r.payableSalary === null ? "-" : r.payableSalary
+
+        ];
 
     });
 
     exportCSV(
 
         `attendance_report_${attnFrom.value}_to_${attnTo.value}.csv`,
-        ["Employee", "Department", "Present", "Absent", "Half Day", "Leave", "Attendance %"],
+        ["Employee", "Department", "Present", "Absent", "Half Day", "Leave", "Attendance %", "Payable Salary"],
         rows
 
     );

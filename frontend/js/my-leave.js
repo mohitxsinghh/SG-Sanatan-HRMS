@@ -7,7 +7,6 @@ const session = requireRole(["Employee"]);
 const today = new Date().toISOString().split("T")[0];
 
 let leaves = [];
-let myBalance = null;
 
 let editMode = false;
 let editLeaveId = null;
@@ -23,7 +22,6 @@ const cancelBtn  = document.getElementById("cancelBtn");
 const saveBtn    = document.getElementById("saveBtn");
 
 const leaveTable = document.getElementById("leaveTable");
-const balanceTable = document.getElementById("balanceTable");
 
 const totalRequests = document.getElementById("totalRequests");
 const pendingCount   = document.getElementById("pendingCount");
@@ -350,51 +348,6 @@ async function cancelLeave(id) {
 window.cancelLeave = cancelLeave;
 
 // ==========================
-// Balance
-// ==========================
-
-function balanceBarHTML(data) {
-
-    const percentUsed = data.quota > 0 ? Math.min(100, (data.used / data.quota) * 100) : 0;
-
-    return `
-
-        <div class="balance-cell">
-
-            <div class="balance-bar">
-                <div class="balance-bar-fill ${percentUsed >= 100 ? "full" : ""}" style="width:${percentUsed}%"></div>
-            </div>
-
-            <div class="balance-text">${data.used} / ${data.quota}</div>
-
-        </div>
-
-    `;
-
-}
-
-function displayBalance() {
-
-    if (!myBalance) {
-
-        balanceTable.innerHTML = `<tr><td colspan="3" class="empty">No balance information yet.</td></tr>`;
-        return;
-
-    }
-
-    balanceTable.innerHTML = `
-
-        <tr>
-            <td>${balanceBarHTML(myBalance.Casual)}</td>
-            <td>${balanceBarHTML(myBalance.Sick)}</td>
-            <td>${balanceBarHTML(myBalance.Earned)}</td>
-        </tr>
-
-    `;
-
-}
-
-// ==========================
 // Filter
 // ==========================
 
@@ -429,18 +382,9 @@ async function loadLeaveData() {
 
     try {
 
-        const [leaveData, balanceData] = await Promise.all([
-
-            apiFetch("/leave"),
-            apiFetch("/leave/balances/all")
-
-        ]);
-
-        leaves = leaveData;
-        myBalance = balanceData[0] || null; // backend already scopes this to "self"
+        leaves = await apiFetch("/leave");
 
         displayLeaves();
-        displayBalance();
         updateDashboard();
 
     } catch (error) {

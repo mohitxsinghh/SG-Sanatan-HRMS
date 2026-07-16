@@ -7,7 +7,6 @@ const session = requireRole(["Admin"]);
 // In-memory copies of what the server returned last.
 
 let leaves = [];
-let balances = [];
 let employees = [];
 
 // Edit Mode
@@ -27,7 +26,6 @@ const cancelBtn  = document.getElementById("cancelBtn");
 const saveBtn    = document.getElementById("saveBtn");
 
 const leaveTable = document.getElementById("leaveTable");
-const balanceTable = document.getElementById("balanceTable");
 
 const totalRequests = document.getElementById("totalRequests");
 const pendingCount   = document.getElementById("pendingCount");
@@ -221,20 +219,17 @@ function getLeaveFormData() {
 async function loadLeaveData() {
 
     leaveTable.innerHTML = `<tr><td colspan="7">Loading leave requests...</td></tr>`;
-    balanceTable.innerHTML = `<tr><td colspan="4">Loading balances...</td></tr>`;
 
     try {
 
-        [leaves, balances, employees] = await Promise.all([
+        [leaves, employees] = await Promise.all([
 
             apiFetch("/leave"),
-            apiFetch("/leave/balances/all"),
             apiFetch("/employees")
 
         ]);
 
         displayLeaves();
-        displayBalances();
         updateDashboard();
 
     } catch (error) {
@@ -523,64 +518,6 @@ async function deleteLeave(id) {
 }
 
 window.deleteLeave = deleteLeave;
-
-// ==========================
-// Balance Overview Table
-// ==========================
-
-function balanceBarHTML(data) {
-
-    const percentUsed = data.quota > 0 ? Math.min(100, (data.used / data.quota) * 100) : 0;
-
-    return `
-
-        <div class="balance-cell">
-
-            <div class="balance-bar">
-                <div class="balance-bar-fill ${percentUsed >= 100 ? "full" : ""}" style="width:${percentUsed}%"></div>
-            </div>
-
-            <div class="balance-text">${data.used} / ${data.quota}</div>
-
-        </div>
-
-    `;
-
-}
-
-function displayBalances() {
-
-    if (balances.length === 0) {
-
-        balanceTable.innerHTML = `<tr><td colspan="4" class="empty">No employees found.</td></tr>`;
-
-        return;
-
-    }
-
-    let rows = "";
-
-    balances.forEach(b => {
-
-        rows += `
-        <tr>
-
-            <td><strong>${b.employee.name}</strong></td>
-
-            <td>${balanceBarHTML(b.Casual)}</td>
-
-            <td>${balanceBarHTML(b.Sick)}</td>
-
-            <td>${balanceBarHTML(b.Earned)}</td>
-
-        </tr>
-        `;
-
-    });
-
-    balanceTable.innerHTML = rows;
-
-}
 
 // ==========================
 // Search / Filter

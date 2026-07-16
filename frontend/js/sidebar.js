@@ -16,6 +16,7 @@ const ADMIN_MENU = [
     { href: "leave.html",       icon: "fa-file-circle-check",   label: "Leave" },
     { href: "reports.html",     icon: "fa-chart-column",        label: "Reports" },
     { href: "holidays.html",    icon: "fa-calendar-days",       label: "Holidays" },
+    { href: "payroll.html",     icon: "fa-money-check-dollar",  label: "Payroll" },
     { href: "settings.html",    icon: "fa-gear",                label: "Settings" }
 
 ];
