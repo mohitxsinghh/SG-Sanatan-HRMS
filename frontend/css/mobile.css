@@ -1,0 +1,334 @@
+/* ===========================================
+   SG SANATAN HRMS - MOBILE LAYER
+   Loaded after every page-specific stylesheet, so rules here win.
+   Everything is scoped under max-width breakpoints - desktop is
+   untouched. Class names match what already exists across every
+   page (style.css / topbar.css / <page>.css), so this is additive,
+   not a rewrite.
+=========================================== */
+
+/* ==========================================
+   HAMBURGER BUTTON
+   Injected into the topbar by topbar.js. Hidden on desktop.
+========================================== */
+
+.mobile-menu-btn{
+    display:none;
+    width:44px;
+    height:44px;
+    border:none;
+    border-radius:var(--radius-sm);
+    background:var(--paper);
+    color:var(--text-primary);
+    font-size:18px;
+    cursor:pointer;
+    flex-shrink:0;
+    align-items:center;
+    justify-content:center;
+    transition:.2s ease;
+}
+
+.mobile-menu-btn:hover{
+    background:var(--gold-soft);
+    color:var(--gold-deep);
+}
+
+/* ==========================================
+   SIDEBAR OVERLAY (backdrop behind the open drawer)
+   Injected into <body> by topbar.js.
+========================================== */
+
+.sidebar-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(15,17,26,.55);
+    z-index:1100;
+}
+
+.sidebar-overlay.show{
+    display:block;
+}
+
+/* ==========================================
+   BREAKPOINT: TABLET (<=900px)
+   Sidebar becomes a full off-canvas drawer instead of the 80px
+   icon rail - a permanent 80px strip is still too much on a phone
+   and gives no room to show labels.
+========================================== */
+
+@media(max-width:900px){
+
+    .sidebar{
+        width:270px;
+        padding:24px 16px;
+        transform:translateX(-100%);
+        transition:transform .25s ease;
+        z-index:1200;
+    }
+
+    .sidebar.open{
+        transform:translateX(0);
+    }
+
+    .logo p,
+    .logo h2{
+        display:block;
+    }
+
+    .logo img{
+        width:64px;
+        height:64px;
+    }
+
+    .sidebar a{
+        justify-content:flex-start;
+        padding:13px 16px;
+    }
+
+    .sidebar a span{
+        display:inline;
+    }
+
+    .content,
+    .attendance-main{
+        margin-left:0;
+        width:100%;
+    }
+
+    .mobile-menu-btn{
+        display:flex;
+    }
+
+}
+
+/* ==========================================
+   BREAKPOINT: PHONE (<=600px)
+========================================== */
+
+@media(max-width:600px){
+
+    /* ---- App shell ---- */
+
+    .content,
+    .attendance-main{
+        padding:14px;
+    }
+
+    /* ---- Topbar ---- */
+
+    .topbar{
+        padding:16px;
+        border-radius:var(--radius-md);
+        gap:12px;
+    }
+
+    .topbar-left{
+        flex-direction:row;
+        align-items:center;
+        gap:12px;
+        width:100%;
+    }
+
+    .page-title{
+        font-size:19px;
+    }
+
+    .page-subtitle{
+        display:none;
+    }
+
+    .topbar-right{
+        gap:10px;
+    }
+
+    .topbar-action-btn,
+    #addEmployeeBtn{
+        padding:10px 14px;
+        font-size:13px;
+    }
+
+    .live-clock{
+        display:none;
+    }
+
+    .profile-info{
+        display:none;
+    }
+
+    .notification-dropdown,
+    .profile-dropdown{
+        position:fixed;
+        top:auto;
+        bottom:0;
+        left:0;
+        right:0;
+        width:100%;
+        max-height:70vh;
+        border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    }
+
+    /* ---- Stat / dashboard cards: single column ---- */
+
+    .stats-cards,
+    .cards,
+    .attendance-cards,
+    .action-grid,
+    .theme-swatches{
+        grid-template-columns:1fr !important;
+    }
+
+    .dashboard-bottom,
+    .dashboard-footer,
+    .settings-grid,
+    .report-body{
+        grid-template-columns:1fr !important;
+    }
+
+    /* ---- Toolbars / filter bars: stack and go full width ---- */
+
+    .toolbar,
+    .filter-bar{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .toolbar-left,
+    .toolbar-right{
+        min-width:0;
+        width:100%;
+        flex-direction:column;
+    }
+
+    .toolbar input,
+    .toolbar select,
+    .toolbar button,
+    .filter-bar input,
+    .filter-bar select{
+        width:100%;
+    }
+
+    .export-btn{
+        margin-left:0;
+        width:100%;
+        justify-content:center;
+    }
+
+    /* ---- Tables: allow horizontal scroll, shrink padding ---- */
+
+    .table-box,
+    .table-container{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    table{
+        min-width:640px;
+    }
+
+    thead th,
+    tbody td{
+        padding:12px 12px;
+        font-size:13px;
+    }
+
+    /* ---- Modals: near-fullscreen on small phones ---- */
+
+    .modal-content{
+        width:100%;
+        max-width:100%;
+        max-height:100vh;
+        height:100%;
+        border-radius:0;
+    }
+
+    .modal{
+        padding:0;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr !important;
+    }
+
+    .full-width{
+        grid-column:auto !important;
+    }
+
+    /* ---- Report tabs: horizontal scroll instead of wrap-crush ---- */
+
+    .report-tabs{
+        width:100%;
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+        flex-wrap:nowrap;
+    }
+
+    .tab-btn{
+        flex-shrink:0;
+        padding:10px 14px;
+        font-size:13px;
+    }
+
+    /* ---- Punch card (My Attendance) ---- */
+
+    .punch-card{
+        flex-direction:column;
+        align-items:stretch;
+        gap:16px;
+    }
+
+    .punch-actions{
+        flex-direction:column;
+    }
+
+    .punch-actions select,
+    .punch-actions button{
+        width:100%;
+    }
+
+    /* ---- Login card ---- */
+
+    .login-card{
+        padding:28px 22px;
+    }
+
+    /* ---- Notice board form row ---- */
+
+    .notice-form-row{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .notice-save-btn{
+        margin-left:0;
+    }
+
+    /* ---- Chart boxes: shorter on phones ---- */
+
+    .chart-box,
+    .chart-container{
+        height:240px;
+    }
+
+}
+
+/* ==========================================
+   BREAKPOINT: SMALL PHONE (<=380px)
+========================================== */
+
+@media(max-width:380px){
+
+    .logo h2{
+        font-size:18px;
+    }
+
+    .stat-card,
+    .card{
+        padding:16px;
+    }
+
+    .page-title{
+        font-size:17px;
+    }
+
+}
