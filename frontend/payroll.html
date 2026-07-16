@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script>
+    (function(){
+        var session = JSON.parse(localStorage.getItem("currentSession") || "null");
+        var allowedRoles = ['Admin'];
+        if (!session || allowedRoles.indexOf(session.role) === -1) {
+            var target = !session ? "login.html" : (session.role === "Admin" ? "dashboard.html" : "employee-dashboard.html");
+            window.location.replace(target);
+        }
+    })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Payroll | SG Sanatan HRMS</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/reports.css">
+    <link rel="stylesheet" href="css/topbar.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="app">
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <img src="assets/logo.webp" alt="Logo">
+
+                <h2>SG Sanatan</h2>
+                <p>Employees Management System</p>
+
+            </div>
+
+            <ul id="sidebarMenu">
+
+            </ul>
+
+        </aside>
+
+        <main class="content">
+
+            <div id="commonTopbar"></div>
+
+            <div class="filter-bar">
+
+                <label for="payrollMonth" style="font-weight:600;font-size:13.5px;color:var(--text-secondary);">Month:</label>
+
+                <input type="month" id="payrollMonth">
+
+                <p class="filter-note">Deductions: Half Day = 0.5 day, Absent/Leave/Unmarked = 1 full day. Working days exclude Sundays &amp; Holidays.</p>
+
+                <button class="export-btn" id="exportPayrollBtn">
+                    <i class="fa-solid fa-file-export"></i> Export CSV
+                </button>
+
+            </div>
+
+            <div class="cards">
+
+                <div class="card"><h3>Employees</h3><h2 id="payrollEmployeeCount">0</h2></div>
+                <div class="card"><h3>Working Days</h3><h2 id="payrollWorkingDays">0</h2></div>
+                <div class="card absent"><h3>Total Deduction</h3><h2 id="payrollTotalDeduction">₹0</h2></div>
+                <div class="card present"><h3>Total Payable</h3><h2 id="payrollTotalPayable">₹0</h2></div>
+
+            </div>
+
+            <div class="table-box" style="max-height:none;">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Salary</th>
+                            <th>Present</th>
+                            <th>Half Day</th>
+                            <th>Absent</th>
+                            <th>Leave</th>
+                            <th>Unmarked</th>
+                            <th>Daily Rate</th>
+                            <th>Deduction</th>
+                            <th>Net Payable</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="payrollTable">
+
+                        <tr><td colspan="11">Loading...</td></tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/topbar.js"></script>
+    <script src="js/payroll.js"></script>
+
+</body>
+
+</html>
