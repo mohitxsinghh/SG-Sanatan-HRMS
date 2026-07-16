@@ -19,7 +19,7 @@
 //   cache, silently refreshed in the background for next time.
 // ===========================================
 
-const CACHE_VERSION = "v3"; // bumped - mobile.css added (hamburger drawer + responsive layer)
+const CACHE_VERSION = "v4"; // bumped - payroll routes wired up, employees.js dept-count fix
 const CACHE_NAME = `sg-sanatan-hrms-${CACHE_VERSION}`;
 
 const APP_SHELL = [
