@@ -69,7 +69,24 @@ const employeeSchema = new mongoose.Schema({
         type: String,
         enum: ["Active", "Inactive"],
         default: "Active"
-    }
+    },
+
+    // Freeform uploaded documents (ID proof, resume, certificates, etc.)
+    // Files themselves live on disk under backend/uploads/employees/<id>/ -
+    // this just tracks the metadata + admin-given label for each one.
+    // See middleware/uploadMiddleware.js and the /documents routes in
+    // routes/employeeRoutes.js.
+
+    documents: [{
+
+        label: { type: String, required: true },
+        fileName: { type: String, required: true },     // name on disk (unique, generated)
+        originalName: { type: String, required: true },  // name the admin's file had
+        mimeType: { type: String, required: true },
+        size: { type: Number, required: true },
+        uploadedAt: { type: Date, default: Date.now }
+
+    }]
 
 }, {
 
