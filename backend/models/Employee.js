@@ -39,6 +39,18 @@ const employeeSchema = new mongoose.Schema({
         default: 0
     },
 
+    // Stored as yyyy-mm-dd, same convention as Attendance/Leave/Holiday
+    // dates. Used by Payroll to prorate a mid-month joiner's pay - days
+    // before this date are excluded entirely rather than counted as
+    // absent. Optional/blank for employees added before this field
+    // existed - Payroll treats a missing joiningDate as "already
+    // employed for the whole month" (unchanged from before this feature).
+
+    joiningDate: {
+        type: String,
+        default: ""
+    },
+
     father: {
         type: String
     },
