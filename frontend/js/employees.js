@@ -57,6 +57,7 @@ const passwordLabel = document.getElementById("passwordLabel");
 const empAddress = document.getElementById("empAddress");
 const empStatus = document.getElementById("empStatus");
 const empSalary = document.getElementById("empSalary");
+const empJoiningDate = document.getElementById("empJoiningDate");
 
 const docSection = document.getElementById("docSection");
 const docSectionHint = document.getElementById("docSectionHint");
@@ -322,6 +323,8 @@ document.addEventListener("click", async function (e) {
 
     clearForm();
 
+    empJoiningDate.value = new Date().toISOString().split("T")[0];
+
     await loadDepartmentsCache();
     populateDepartmentDropdown();
 
@@ -389,7 +392,8 @@ function getEmployeeFormData() {
         email: empEmail.value.trim(),
         address: empAddress.value.trim(),
         status: empStatus.value,
-        salary: Number(empSalary.value) || 0
+        salary: Number(empSalary.value) || 0,
+        joiningDate: empJoiningDate.value || ""
 
     };
 
@@ -422,6 +426,7 @@ function fillEmployeeForm(employee) {
     empAddress.value = employee.address || "";
     empStatus.value = employee.status || "Active";
     empSalary.value = employee.salary || "";
+    empJoiningDate.value = employee.joiningDate || "";
 
     empPassword.value = "";
 
