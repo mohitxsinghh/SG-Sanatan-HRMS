@@ -66,12 +66,64 @@ function loadMonthAndRecent(recentRecords) {
 
 }
 
-// NOTE: loadLeaveBalance() was removed along with leave balances
-// (pay is now deduction-based on Attendance - see the Payroll work
-// discussed earlier). The "Leave Days Remaining" stat card + "My
-// Leave Balance" list in employee-dashboard.html still need to be
-// replaced with a "This Month's Deduction" card once the Payroll
-// endpoint is built - that part is still pending.
+// ==========================================
+// This Month's Deduction (Payroll)
+// ==========================================
+
+function loadMonthDeduction(payrollData) {
+
+    const el = document.getElementById("monthDeduction");
+
+    if (!el) return;
+
+    const myRow = payrollData.results[0]; // backend scopes this to "self" for Employees
+
+    el.textContent = "₹" + Number(myRow?.deduction || 0).toLocaleString("en-IN");
+
+}
+
+// ==========================================
+// Recent Leave Requests
+// ==========================================
+
+function statusBadgeClass(status) {
+
+    if (status === "Approved") return "status-approved";
+    if (status === "Rejected") return "status-rejected";
+    return "status-pending";
+
+}
+
+function loadRecentLeave(leaves) {
+
+    const listEl = document.getElementById("recentLeaveList");
+
+    if (!listEl) return;
+
+    if (leaves.length === 0) {
+
+        listEl.innerHTML = "<li>No leave requests yet.</li>";
+
+        return;
+
+    }
+
+    const recent = leaves.slice(0, 5); // already sorted newest-first by the backend
+
+    listEl.innerHTML = recent.map(l => `
+
+        <li>
+            <div>
+                <strong>${l.leaveType}</strong>
+                <br>
+                <small>${l.fromDate} to ${l.toDate} · ${l.days} day(s)</small>
+            </div>
+            <span class="${statusBadgeClass(l.status)}">${l.status}</span>
+        </li>
+
+    `).join("");
+
+}
 
 // ==========================================
 // Next Holiday
@@ -155,11 +207,15 @@ async function init() {
         monthStart.setDate(monthStart.getDate() - 30);
         const from = monthStart.toISOString().split("T")[0];
 
-        const [recentRecords, holidays, notices] = await Promise.all([
+        const currentMonth = today.slice(0, 7);
+
+        const [recentRecords, holidays, notices, payrollData, leaves] = await Promise.all([
 
             apiFetch(`/attendance?from=${from}&to=${today}`),
             apiFetch("/holidays"),
-            apiFetch("/notices")
+            apiFetch("/notices"),
+            apiFetch(`/payroll?month=${currentMonth}`),
+            apiFetch("/leave")
 
         ]);
 
@@ -167,6 +223,8 @@ async function init() {
         loadMonthAndRecent(recentRecords);
         loadNextHoliday(holidays);
         loadNotices(notices);
+        loadMonthDeduction(payrollData);
+        loadRecentLeave(leaves);
 
     } catch (error) {
 
