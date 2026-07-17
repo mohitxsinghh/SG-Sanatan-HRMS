@@ -5,11 +5,14 @@ const router = express.Router();
 const Employee = require("../models/Employee");
 const Attendance = require("../models/Attendance");
 const Holiday = require("../models/Holiday");
-const { protect, authorizeRoles } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 
-// Payroll is Admin-only - salary figures are sensitive.
+// Payroll figures are sensitive - Admin sees everyone. Employees are
+// now allowed to call this too, but ONLY ever get their own row back
+// (see the employees.find() scoping below) - this powers the "This
+// Month's Deduction" card on their own dashboard.
 
-router.use(protect, authorizeRoles("Admin"));
+router.use(protect);
 
 // -------------------------------------------
 // Helper: every yyyy-mm-dd date in a given month
@@ -116,7 +119,11 @@ router.get("/", async (req, res) => {
 
         const workingDaysCount = workingDates.length;
 
-        const employees = await Employee.find();
+        const employees = req.user.role === "Employee"
+
+            ? await Employee.find({ _id: req.user.id })
+
+            : await Employee.find();
 
         const attendanceRecords = effectiveLastDay
 
