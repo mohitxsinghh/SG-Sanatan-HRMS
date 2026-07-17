@@ -65,7 +65,7 @@ async function loadPayroll() {
 
     if (!month) return;
 
-    payrollTable.innerHTML = `<tr><td colspan="11">Loading...</td></tr>`;
+    payrollTable.innerHTML = `<tr><td colspan="12">Loading...</td></tr>`;
 
     try {
 
@@ -84,7 +84,7 @@ async function loadPayroll() {
 
         if (data.results.length === 0) {
 
-            payrollTable.innerHTML = `<tr><td colspan="11" class="empty">No employees found.</td></tr>`;
+            payrollTable.innerHTML = `<tr><td colspan="12" class="empty">No employees found.</td></tr>`;
 
             return;
 
@@ -101,6 +101,7 @@ async function loadPayroll() {
                 <td>${r.absent}</td>
                 <td>${r.leave}</td>
                 <td>${r.notMarked}</td>
+                <td>${r.holiday}</td>
                 <td>${formatRupees(r.dailyRate)}</td>
                 <td>${formatRupees(r.deduction)}</td>
                 <td><strong>${formatRupees(r.netPayable)}</strong></td>
@@ -110,7 +111,7 @@ async function loadPayroll() {
 
     } catch (error) {
 
-        payrollTable.innerHTML = `<tr><td colspan="11">Failed to load: ${error.message}</td></tr>`;
+        payrollTable.innerHTML = `<tr><td colspan="12">Failed to load: ${error.message}</td></tr>`;
 
         showToast("Load Failed", error.message, true);
 
@@ -137,6 +138,9 @@ document.getElementById("exportPayrollBtn").addEventListener("click", () => {
         r.absent,
         r.leave,
         r.notMarked,
+        r.holiday,
+        r.earnedDays,
+        r.deductedDays,
         r.dailyRate,
         r.deduction,
         r.netPayable
@@ -145,9 +149,21 @@ document.getElementById("exportPayrollBtn").addEventListener("click", () => {
 
     const header = [
 
-        "Employee", "Employee ID", "Department", "Salary",
-        "Present", "Half Day", "Absent", "Leave", "Unmarked",
-        "Daily Rate", "Deduction", "Net Payable"
+        "Employee",
+        "Employee ID",
+        "Department",
+        "Salary",
+        "Present",
+        "Half Day",
+        "Absent",
+        "Leave",
+        "Unmarked",
+        "Holiday",
+        "Earned Days",
+        "Deducted Days",
+        "Daily Rate",
+        "Deduction",
+        "Net Payable"
 
     ];
 
