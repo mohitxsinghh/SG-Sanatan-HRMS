@@ -73,6 +73,94 @@
 .leave{ border-left-color:var(--status-leave); }
 
 /* ==========================================
+   PUNCH CARD (My Attendance - Employee)
+========================================== */
+
+.punch-card{
+    background:var(--surface);
+    border-radius:var(--radius-lg);
+    padding:24px 28px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    box-shadow:var(--shadow-sm);
+    margin-bottom:24px;
+    border-left:4px solid var(--gold);
+    flex-wrap:wrap;
+}
+
+.punch-info h2{
+    font-family:var(--font-display);
+    font-size:20px;
+    color:var(--text-primary);
+    margin-bottom:4px;
+}
+
+.punch-info p{
+    color:var(--text-secondary);
+    font-size:13.5px;
+}
+
+.punch-actions{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.punch-actions select{
+    height:46px;
+    padding:0 16px;
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    font-size:14px;
+    font-family:var(--font-body);
+    background:var(--surface);
+    color:var(--text-primary);
+    cursor:pointer;
+    min-width:150px;
+    transition:.2s ease;
+}
+
+.punch-actions select:focus{
+    border-color:var(--gold);
+    outline:none;
+    box-shadow:0 0 0 4px var(--gold-soft);
+}
+
+.punch-actions button{
+    height:46px;
+    padding:0 24px;
+    border:none;
+    border-radius:var(--radius-sm);
+    color:#fff;
+    cursor:pointer;
+    font-weight:700;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    transition:.2s ease;
+    box-shadow:var(--shadow-sm);
+}
+
+.punch-actions button i{
+    font-size:14px;
+}
+
+.punch-actions button:hover{
+    transform:translateY(-2px);
+    box-shadow:var(--shadow-md);
+}
+
+.punch-actions button:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+    transform:none;
+}
+
+/* ==========================================
    TOOLBAR
 ========================================== */
 

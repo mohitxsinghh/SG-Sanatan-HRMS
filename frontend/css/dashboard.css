@@ -514,3 +514,34 @@
         grid-template-columns:1fr;
     }
 }
+
+/* ==========================================
+   LEAVE STATUS BADGES (Recent Leave Requests card)
+========================================== */
+
+.status-pending,
+.status-approved,
+.status-rejected{
+    display:inline-flex;
+    align-items:center;
+    padding:5px 12px;
+    border-radius:20px;
+    font-weight:600;
+    font-size:12px;
+    flex-shrink:0;
+}
+
+.status-pending{
+    background:var(--status-halfday-soft);
+    color:var(--status-halfday);
+}
+
+.status-approved{
+    background:var(--status-present-soft);
+    color:var(--status-present);
+}
+
+.status-rejected{
+    background:var(--status-absent-soft);
+    color:var(--status-absent);
+}
