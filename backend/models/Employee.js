@@ -29,10 +29,10 @@ const employeeSchema = new mongoose.Schema({
     },
 
     // Monthly salary used by the Payroll module to compute deductions
-    // (see routes/payrollRoutes.js). Present = full pay for that day,
-    // Half Day = half-day deduction, Absent/Leave/unmarked = full-day
-    // deduction. Daily rate = salary ÷ working days in that month
-    // (Sundays + Holidays excluded).
+    // (see routes/payrollRoutes.js). Daily rate = salary / total calendar
+    // days in the month. Sundays and Holidays are always fully paid.
+    // Present = fully paid, Half Day = half a day deducted,
+    // Absent/Leave/unmarked = a full day deducted.
 
     salary: {
         type: Number,
@@ -40,11 +40,13 @@ const employeeSchema = new mongoose.Schema({
     },
 
     // Stored as yyyy-mm-dd, same convention as Attendance/Leave/Holiday
-    // dates. Used by Payroll to prorate a mid-month joiner's pay - days
-    // before this date are excluded entirely rather than counted as
-    // absent. Optional/blank for employees added before this field
-    // existed - Payroll treats a missing joiningDate as "already
-    // employed for the whole month" (unchanged from before this feature).
+    // dates. Used by Payroll to prorate a mid-month joiner's pay - every
+    // day before this date is deducted in FULL, even if that day happens
+    // to be a Sunday or Holiday (they simply weren't employed yet, so
+    // the "always paid" day-off rule doesn't apply to them). Optional/
+    // blank for employees added before this field existed - Payroll
+    // treats a missing joiningDate as "no pre-joining deduction at all",
+    // i.e. employed for the whole month being viewed.
 
     joiningDate: {
         type: String,
