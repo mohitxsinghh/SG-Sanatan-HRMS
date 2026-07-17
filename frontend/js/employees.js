@@ -58,6 +58,14 @@ const empAddress = document.getElementById("empAddress");
 const empStatus = document.getElementById("empStatus");
 const empSalary = document.getElementById("empSalary");
 
+const docSection = document.getElementById("docSection");
+const docSectionHint = document.getElementById("docSectionHint");
+const docUploadRow = document.getElementById("docUploadRow");
+const docLabel = document.getElementById("docLabel");
+const docFile = document.getElementById("docFile");
+const docUploadBtn = document.getElementById("docUploadBtn");
+const docList = document.getElementById("docList");
+
 // ==========================
 // Toast
 // ==========================
@@ -92,6 +100,209 @@ function showToast(title, message, isError = false) {
 }
 
 // ==========================
+// Documents
+// ==========================
+
+function formatFileSize(bytes) {
+
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
+
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+
+}
+
+function lockDocSection() {
+
+    docSectionHint.style.display = "block";
+    docSectionHint.textContent = "Save this employee first, then you can attach documents here.";
+    docUploadRow.style.display = "none";
+    docList.innerHTML = "";
+
+}
+
+function unlockDocSection(documents = []) {
+
+    docSectionHint.style.display = "none";
+    docUploadRow.style.display = "flex";
+
+    renderDocuments(documents);
+
+}
+
+function renderDocuments(documents = []) {
+
+    if (documents.length === 0) {
+
+        docList.innerHTML = `<li><span class="doc-info"><small>No documents uploaded yet.</small></span></li>`;
+
+        return;
+
+    }
+
+    docList.innerHTML = documents.map(doc => `
+
+        <li>
+
+            <div class="doc-info">
+                <strong>${doc.label}</strong>
+                <small>${doc.originalName} · ${formatFileSize(doc.size)}</small>
+            </div>
+
+            <div class="doc-actions">
+
+                <button class="doc-download-btn" onclick="downloadDocument('${editEmployeeId}', '${doc._id}', '${doc.originalName.replace(/'/g, "\\'")}')" title="Download">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+
+                <button class="doc-delete-btn" onclick="deleteDocument('${editEmployeeId}', '${doc._id}')" title="Delete">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+
+            </div>
+
+        </li>
+
+    `).join("");
+
+}
+
+docUploadBtn.addEventListener("click", async () => {
+
+    if (!editEmployeeId) {
+
+        showToast("Save First", "Save the employee before attaching documents.", true);
+        return;
+
+    }
+
+    const label = docLabel.value.trim();
+    const file = docFile.files[0];
+
+    if (!label) {
+
+        showToast("Missing Label", "Please give this document a label.", true);
+        docLabel.focus();
+        return;
+
+    }
+
+    if (!file) {
+
+        showToast("No File", "Please choose a file to upload.", true);
+        return;
+
+    }
+
+    const formData = new FormData();
+
+    formData.append("label", label);
+    formData.append("file", file);
+
+    docUploadBtn.disabled = true;
+    docUploadBtn.textContent = "Uploading...";
+
+    try {
+
+        const result = await apiFetch(`/employees/${editEmployeeId}/documents`, {
+
+            method: "POST",
+            body: formData
+
+        });
+
+        renderDocuments(result.documents);
+
+        docLabel.value = "";
+        docFile.value = "";
+
+        showToast("Document Uploaded", `${label} was attached to this employee.`);
+
+    } catch (error) {
+
+        showToast("Upload Failed", error.message, true);
+
+    } finally {
+
+        docUploadBtn.disabled = false;
+        docUploadBtn.innerHTML = `<i class="fa-solid fa-upload"></i> Upload`;
+
+    }
+
+});
+
+// Downloads go through a raw fetch (not apiFetch, which auto-parses
+// JSON) so the response can be handled as a file blob, with the auth
+// token attached manually since this isn't a plain <a href> link.
+
+async function downloadDocument(employeeId, docId, originalName) {
+
+    try {
+
+        const token = localStorage.getItem("authToken");
+
+        const response = await fetch(`/api/employees/${employeeId}/documents/${docId}`, {
+
+            headers: token ? { "Authorization": `Bearer ${token}` } : {}
+
+        });
+
+        if (!response.ok) {
+
+            throw new Error("Download failed");
+
+        }
+
+        const blob = await response.blob();
+
+        const link = document.createElement("a");
+
+        link.href = URL.createObjectURL(blob);
+        link.download = originalName;
+
+        link.click();
+
+        URL.revokeObjectURL(link.href);
+
+    } catch (error) {
+
+        showToast("Download Failed", error.message, true);
+
+    }
+
+}
+
+window.downloadDocument = downloadDocument;
+
+async function deleteDocument(employeeId, docId) {
+
+    const confirmDelete = confirm("Delete this document? This cannot be undone.");
+
+    if (!confirmDelete) return;
+
+    try {
+
+        const result = await apiFetch(`/employees/${employeeId}/documents/${docId}`, {
+
+            method: "DELETE"
+
+        });
+
+        renderDocuments(result.documents);
+
+        showToast("Document Deleted", "The document has been removed.");
+
+    } catch (error) {
+
+        showToast("Delete Failed", error.message, true);
+
+    }
+
+}
+
+window.deleteDocument = deleteDocument;
+
+// ==========================
 // Open Add Employee Modal
 // ==========================
 
@@ -113,6 +324,8 @@ document.addEventListener("click", async function (e) {
 
     await loadDepartmentsCache();
     populateDepartmentDropdown();
+
+    lockDocSection();
 
     employeeModal.style.display = "flex";
 
@@ -363,24 +576,40 @@ saveBtn.onclick = async function () {
 
             showToast("Employee Updated", `${data.name}'s details were updated.`);
 
+            closeEmployeeModal();
+
+            await loadEmployees();
+
         } else {
 
             data.employeeId = generateEmployeeId();
 
-            await apiFetch("/employees", {
+            const result = await apiFetch("/employees", {
 
                 method: "POST",
                 body: JSON.stringify(data)
 
             });
 
-            showToast("Employee Added", `${data.name} has been added successfully.`);
+            showToast("Employee Added", `${data.name} has been added successfully. You can now attach documents below.`);
+
+            // Stay open, switch into edit mode for the employee that
+            // was just created - this unlocks the Documents section,
+            // which needs a real employee _id to attach files to.
+
+            editMode = true;
+            editEmployeeId = result.employee._id;
+
+            document.getElementById("modalTitle").textContent = "Edit Employee";
+            saveBtn.textContent = "Update Employee";
+            passwordLabel.innerHTML = "Password <small>(leave blank to keep current)</small>";
+            empPassword.placeholder = "Leave blank to keep current password";
+
+            unlockDocSection([]);
+
+            await loadEmployees();
 
         }
-
-        closeEmployeeModal();
-
-        await loadEmployees();
 
     } catch (error) {
 
@@ -472,6 +701,8 @@ async function editEmployee(id) {
     await loadDepartmentsCache();
     populateDepartmentDropdown();
     fillEmployeeForm(employee);
+
+    unlockDocSection(employee.documents || []);
 
     document.getElementById("modalTitle").textContent = "Edit Employee";
     saveBtn.textContent = "Update Employee";

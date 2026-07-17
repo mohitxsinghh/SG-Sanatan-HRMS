@@ -16,9 +16,15 @@ async function apiFetch(endpoint, options = {}) {
 
     const token = localStorage.getItem("authToken");
 
+    // FormData (file uploads) must NOT have Content-Type set manually -
+    // the browser needs to add its own multipart boundary. JSON requests
+    // keep the default as before.
+
+    const isFormData = options.body instanceof FormData;
+
     const headers = {
 
-        "Content-Type": "application/json",
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
 
         ...(options.headers || {})
 
