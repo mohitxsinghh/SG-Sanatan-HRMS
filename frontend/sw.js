@@ -19,7 +19,7 @@
 //   cache, silently refreshed in the background for next time.
 // ===========================================
 
-const CACHE_VERSION = "v7"; // bumped - payroll now prorates for mid-month joiners
+const CACHE_VERSION = "v8"; // bumped - punch card CSS fix, employee dashboard deduction+leave requests
 const CACHE_NAME = `sg-sanatan-hrms-${CACHE_VERSION}`;
 
 const APP_SHELL = [
