@@ -19,7 +19,7 @@
 //   cache, silently refreshed in the background for next time.
 // ===========================================
 
-const CACHE_VERSION = "v4"; // bumped - payroll routes wired up, employees.js dept-count fix
+const CACHE_VERSION = "v6"; // bumped - employee document uploads added
 const CACHE_NAME = `sg-sanatan-hrms-${CACHE_VERSION}`;
 
 const APP_SHELL = [

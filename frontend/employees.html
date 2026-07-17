@@ -254,6 +254,32 @@
 
                 </form>
 
+                <!-- ===================================
+                 DOCUMENTS
+                =================================== -->
+
+                <div class="doc-section" id="docSection">
+
+                    <h3 class="doc-section-title">Documents</h3>
+
+                    <p class="doc-section-hint" id="docSectionHint">
+                        Save this employee first, then you can attach documents here.
+                    </p>
+
+                    <div class="doc-upload-row" id="docUploadRow" style="display:none;">
+
+                        <input type="text" id="docLabel" placeholder="Label (e.g. Aadhar Card, Resume)">
+                        <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png">
+                        <button type="button" class="doc-upload-btn" id="docUploadBtn">
+                            <i class="fa-solid fa-upload"></i> Upload
+                        </button>
+
+                    </div>
+
+                    <ul class="doc-list" id="docList"></ul>
+
+                </div>
+
             </div>
 
             <div class="modal-footer">
