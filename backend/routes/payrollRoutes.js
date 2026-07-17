@@ -7,28 +7,58 @@ const Attendance = require("../models/Attendance");
 const Holiday = require("../models/Holiday");
 const { protect } = require("../middleware/authMiddleware");
 
-// Payroll figures are sensitive - Admin sees everyone. Employees are
-// now allowed to call this too, but ONLY ever get their own row back
-// (see the employees.find() scoping below) - this powers the "This
-// Month's Deduction" card on their own dashboard.
-
 router.use(protect);
 
-// -------------------------------------------
-// Helper: every yyyy-mm-dd date in a given month
-// -------------------------------------------
+// ===========================================
+// SG SANATAN HRMS - Payroll Policy
+//
+// 1. Sundays are NOT working days.
+//    - Excluded completely.
+//    - Unpaid weekly off.
+//
+// 2. Holidays ARE working days.
+//    - Always fully paid.
+//    - Attendance on holidays is ignored.
+//
+// 3. Normal Working Days (excluding Sundays & Holidays):
+//      Present   -> Full Pay
+//      Half Day  -> Half Pay
+//      Absent    -> Full Day Deduction
+//      Leave     -> Full Day Deduction
+//      Unmarked  -> Pending (No Pay, No Deduction)
+//
+// 4. Working Days = Applicable Calendar Days - Sundays
+//
+// 5. Daily Rate = Monthly Salary / Working Days
+//
+// 6. Net Payable = Daily Rate × Earned Days
+//
+// 7. Earned Days =
+//      Paid Holidays +
+//      Present +
+//      (Half Day × 0.5)
+//
+// ===========================================
+
+function pad(n) {
+
+    return String(n).padStart(2, "0");
+
+}
+
+// Every yyyy-mm-dd date in a month, built as plain strings - never
+// routed through Date/toISOString, which silently shifts dates by a
+// day whenever the server's timezone is ahead of UTC.
 
 function getDatesInMonth(year, monthIndex) {
 
     const dates = [];
 
-    const date = new Date(year, monthIndex, 1);
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
 
-    while (date.getMonth() === monthIndex) {
+    for (let day = 1; day <= daysInMonth; day++) {
 
-        dates.push(date.toISOString().split("T")[0]);
-
-        date.setDate(date.getDate() + 1);
+        dates.push(`${year}-${pad(monthIndex + 1)}-${pad(day)}`);
 
     }
 
@@ -36,144 +66,154 @@ function getDatesInMonth(year, monthIndex) {
 
 }
 
-// -------------------------------------------
-// GET /api/payroll?month=YYYY-MM
-//
-// Working days = every date in the month EXCEPT Sundays and company
-// Holidays. Daily rate = monthly salary / working days - this rate is
-// the SAME for every employee regardless of when they joined, so a
-// day's worth of pay means the same thing company-wide.
-//
-// IMPORTANT: for the CURRENT month, this only counts days up to and
-// including TODAY. A day that hasn't happened yet has no attendance
-// record by definition - it must not be treated as "unmarked = Absent",
-// or every employee's pay would look wrongly docked until the month
-// is actually over. For a month that's entirely in the future, there's
-// nothing to deduct yet at all (working days = 0, full salary shown).
-//
-// MID-MONTH JOINERS: an employee's own days-owed window starts at
-// max(month start, their joiningDate) - days before they joined are
-// excluded entirely, not counted as absent. If joiningDate is blank
-// (added before this field existed), they're treated as employed for
-// the whole month, same as before this feature - fully backward
-// compatible. If joiningDate falls after the elapsed window (they
-// haven't started yet, or start later this month), they simply have
-// zero owed days so far and a full salary shown as payable (nothing
-// to deduct from yet).
-//
-// Deduction policy (Present is the only status that's fully paid):
-//   Present    -> 0 deduction
-//   Half Day   -> 0.5 x daily rate
-//   Absent     -> 1 x daily rate
-//   Leave      -> 1 x daily rate (approved or not - leave no longer
-//                 protects pay, it's just a schedule record now)
-//   Not marked -> 1 x daily rate, but ONLY for the employee's own
-//                 owed working days that have already passed.
-// -------------------------------------------
+function isSunday(dateStr) {
+
+    return new Date(dateStr + "T00:00:00").getDay() === 0;
+
+}
 
 router.get("/", async (req, res) => {
 
     try {
 
-        const month = req.query.month || new Date().toISOString().slice(0, 7); // "YYYY-MM"
+        const now = new Date();
+
+        const month = req.query.month || `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
 
         const [year, monthNum] = month.split("-").map(Number);
         const monthIndex = monthNum - 1;
 
+        const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
         const allDatesInMonth = getDatesInMonth(year, monthIndex);
 
-        const firstDay = allDatesInMonth[0];
-        const lastDay = allDatesInMonth[allDatesInMonth.length - 1];
+        // Only count days that have actually happened.
 
-        const todayStr = new Date().toISOString().split("T")[0];
+        const elapsedDates = allDatesInMonth;
 
-        // Only count days up to today. If the whole month is still in
-        // the future, there are zero elapsed days to judge yet.
+        if (elapsedDates.length === 0) {
 
-        const elapsedDatesInMonth = allDatesInMonth.filter(d => d <= todayStr);
+            // The whole month is still in the future - nothing to
+            // calculate yet, full salary, zero working days so far.
 
-        const effectiveLastDay = elapsedDatesInMonth.length > 0
-            ? elapsedDatesInMonth[elapsedDatesInMonth.length - 1]
-            : null;
+            const employees = req.user.role === "Employee"
+                ? await Employee.find({ _id: req.user.id })
+                : await Employee.find();
 
-        // Company-wide working days = elapsed dates only, minus Sundays
-        // and Holidays. This drives the daily rate for EVERY employee,
-        // regardless of when they personally joined.
+            return res.json({
 
-        let workingDates = [];
+                month,
+                workingDays: 0,
+                holidayDays: 0,
+                results: employees.map(emp => ({
 
-        if (effectiveLastDay) {
+                    employee: {
+                        _id: emp._id,
+                        name: emp.name,
+                        employeeId: emp.employeeId,
+                        department: emp.department
+                    },
 
-            const holidays = await Holiday.find({ date: { $gte: firstDay, $lte: effectiveLastDay } });
-            const holidayDates = new Set(holidays.map(h => h.date));
+                    salary: emp.salary,
+                    workingDays: 0,
+                    dailyRate: 0,
+                    present: 0,
+                    halfDay: 0,
+                    absent: 0,
+                    leave: 0,
+                    notMarked: 0,
+                    holiday: 0,
+                    deduction: 0,
+                    netPayable: emp.salary
 
-            workingDates = elapsedDatesInMonth.filter(dateStr => {
-
-                const dayOfWeek = new Date(dateStr + "T00:00:00").getDay(); // 0 = Sunday
-
-                return dayOfWeek !== 0 && !holidayDates.has(dateStr);
+                }))
 
             });
 
         }
 
+        const firstDay = allDatesInMonth[0];
+        const lastDay = allDatesInMonth[allDatesInMonth.length - 1];
+
+        // Working Days = elapsed dates, minus Sunday only. Holidays stay in.
+
+        const workingDates = elapsedDates.filter(d => !isSunday(d));
         const workingDaysCount = workingDates.length;
 
+        const holidays = await Holiday.find({ date: { $gte: firstDay, $lte: lastDay } });
+        const holidayDates = new Set(holidays.map(h => h.date));
+
+        // Attendance only ever matters on a non-Sunday, non-Holiday date.
+
+        const payableDates = workingDates.filter(d => !holidayDates.has(d));
+        const holidayCount = workingDates.length - payableDates.length;
+
         const employees = req.user.role === "Employee"
-
             ? await Employee.find({ _id: req.user.id })
-
             : await Employee.find();
 
-        const attendanceRecords = effectiveLastDay
+        const attendanceRecords = await Attendance.find({ date: { $gte: firstDay, $lte: lastDay } });
 
-            ? await Attendance.find({ date: { $gte: firstDay, $lte: effectiveLastDay } })
-
-            : [];
-
-        const result = employees.map(emp => {
+        const results = employees.map(emp => {
 
             const dailyRate = workingDaysCount > 0 ? emp.salary / workingDaysCount : 0;
 
-            // This employee's own owed window - working days on/after
-            // their joiningDate (blank joiningDate = employed all month,
-            // same behavior as before this feature existed).
-
-            const ownWorkingDates = emp.joiningDate
-
-                ? workingDates.filter(d => d >= emp.joiningDate)
-
-                : workingDates;
-
-            const ownWorkingDaysCount = ownWorkingDates.length;
-
             const empRecords = attendanceRecords.filter(r =>
 
-                r.employee.toString() === emp._id.toString() && ownWorkingDates.includes(r.date)
+                r.employee.toString() === emp._id.toString() && payableDates.includes(r.date)
 
             );
 
+            // =========================
+            // Attendance Summary
+            // =========================
+
             const present = empRecords.filter(r => r.status === "Present").length;
+
             const halfDay = empRecords.filter(r => r.status === "Half Day").length;
+
             const absent = empRecords.filter(r => r.status === "Absent").length;
+
             const leave = empRecords.filter(r => r.status === "Leave").length;
 
-            const markedCount = present + halfDay + absent + leave;
+            // Attendance marked on normal working days
+            const markedCount =
+                present +
+                halfDay +
+                absent +
+                leave;
 
-            const notMarked = Math.max(0, ownWorkingDaysCount - markedCount);
+            // Remaining working days become absent
+            // during payroll calculation.
+            const finalAbsent =
+                absent +
+                Math.max(0, payableDates.length - markedCount);
 
-            const deductibleDays = (halfDay * 0.5) + absent + leave + notMarked;
+            // Keep this only for display
+            const notMarked =
+                Math.max(0, payableDates.length - markedCount);
 
-            // Payable is earned FROM the days owed, not "salary minus
-            // deduction" - this is what makes mid-month joining prorate
-            // correctly. For an employee with no join-date cutoff this
-            // reduces to exactly the old salary-minus-deduction result.
+            // Holidays are always paid
+            const paidHolidays = holidayCount;
 
-            const owedDays = Math.max(0, ownWorkingDaysCount - deductibleDays);
+            // Deducted Days
+            const deductedDays =
+                finalAbsent +
+                leave +
+                (halfDay * 0.5);
 
-            const deduction = Math.round(deductibleDays * dailyRate * 100) / 100;
+            // Earned Days
+            const earnedDays =
+                workingDaysCount -
+                deductedDays;
 
-            const netPayable = Math.round(owedDays * dailyRate * 100) / 100;
+            // Deduction Amount
+            const deduction =
+                Math.round(deductedDays * dailyRate * 100) / 100;
+
+            // Net Salary
+            const netPayable =
+                Math.round(earnedDays * dailyRate * 100) / 100;
 
             return {
 
@@ -181,21 +221,33 @@ router.get("/", async (req, res) => {
                     _id: emp._id,
                     name: emp.name,
                     employeeId: emp.employeeId,
-                    department: emp.department,
-                    joiningDate: emp.joiningDate || null
+                    department: emp.department
                 },
 
                 salary: emp.salary,
-                workingDays: ownWorkingDaysCount,
+
+                workingDays: workingDaysCount,
+
                 dailyRate: Math.round(dailyRate * 100) / 100,
 
                 present,
+
                 halfDay,
+
                 absent,
+
                 leave,
+
                 notMarked,
 
+                holiday: paidHolidays,
+
+                earnedDays,
+
+                deductedDays,
+
                 deduction,
+
                 netPayable
 
             };
@@ -206,8 +258,8 @@ router.get("/", async (req, res) => {
 
             month,
             workingDays: workingDaysCount,
-            elapsedThroughDate: effectiveLastDay, // lets the frontend show "as of Jul 16" for the current month
-            results: result
+            holidayDays: holidayCount,
+            results
 
         });
 
