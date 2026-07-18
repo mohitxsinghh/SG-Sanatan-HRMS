@@ -8,6 +8,10 @@ const { upload, UPLOAD_ROOT } = require("../middleware/uploadMiddleware");
 const path = require("path");
 const fs = require("fs");
 
+const Attendance = require("../models/Attendance");
+const Leave = require("../models/Leave");
+const Holiday = require("../models/Holiday");
+
 // Every route below requires a valid token AND the Admin role,
 // EXCEPT /directory (defined first, before the blanket restriction
 // kicks in) - that one is deliberately open to any logged-in user,
@@ -59,6 +63,42 @@ router.get("/", async (req, res) => {
 
 });
 
+// ===========================================
+// GET SINGLE EMPLOYEE
+// ===========================================
+
+router.get("/:id", async (req, res) => {
+
+    try {
+
+        const employee = await Employee.findById(req.params.id);
+
+        if (!employee) {
+
+            return res.status(404).json({
+
+                message: "Employee not found"
+
+            });
+
+        }
+
+        res.json(employee);
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+
+            message: error.message
+
+        });
+
+    }
+
+});
+
 // POST New Employee
 // (password is required by the schema - Admin sets an initial
 // password here, same as the "Create Login" step in the frontend)
@@ -66,6 +106,22 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
 
     try {
+
+        const existingEmployee = await Employee.findOne({
+
+            employeeId: req.body.employeeId
+
+        });
+
+        if (existingEmployee) {
+
+            return res.status(400).json({
+
+                message: "Employee ID already exists."
+
+            });
+
+        }
 
         const employee = await Employee.create(req.body);
 
@@ -77,7 +133,9 @@ router.post("/", async (req, res) => {
 
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         res.status(400).json({
 
@@ -105,6 +163,28 @@ router.put("/:id", async (req, res) => {
         if (!updates.password) {
 
             delete updates.password;
+
+        }
+
+        if (req.body.employeeId) {
+
+            const existingEmployee = await Employee.findOne({
+
+                employeeId: req.body.employeeId,
+
+                _id: { $ne: req.params.id }
+
+            });
+
+            if (existingEmployee) {
+
+                return res.status(400).json({
+
+                    message: "Employee ID already exists."
+
+                });
+
+            }
 
         }
 
@@ -338,6 +418,156 @@ router.delete("/:id/documents/:docId", async (req, res) => {
     } catch (error) {
 
         res.status(400).json({ message: error.message });
+
+    }
+
+});
+
+// ===========================================
+// EMPLOYEE PROFILE SUMMARY
+// ===========================================
+
+router.get("/:id/profile", async (req, res) => {
+
+    try {
+
+        const employee = await Employee.findById(req.params.id);
+
+        if (!employee) {
+
+            return res.status(404).json({
+
+                message: "Employee not found"
+
+            });
+
+        }
+
+        const now = new Date();
+
+        const year = now.getFullYear();
+
+        const month = String(now.getMonth() + 1).padStart(2,"0");
+
+        const firstDay = `${year}-${month}-01`;
+
+        const lastDay = `${year}-${month}-${new Date(year, now.getMonth()+1,0).getDate()}`;
+
+        const attendance = await Attendance.find({
+
+            employee: employee._id,
+
+            date: {
+
+                $gte:firstDay,
+
+                $lte:lastDay
+
+            }
+
+        });
+
+        const holidays = await Holiday.find({
+
+            date:{
+
+                $gte:firstDay,
+
+                $lte:lastDay
+
+            }
+
+        });
+
+        const holidayDates = holidays.map(h=>h.date);
+
+        function isSunday(date) {
+
+            return new Date(date + "T00:00:00").getDay() === 0;
+
+        }
+
+        const workingDates = [];
+
+        for (let day = 1; day <= new Date(year, now.getMonth() + 1, 0).getDate(); day++) {
+
+            const date = `${year}-${month}-${String(day).padStart(2, "0")}`;
+
+            if (isSunday(date)) continue;
+
+            workingDates.push(date);
+
+        }
+
+        const approvedLeaves = await Leave.find({
+
+            employee: employee._id,
+
+            status: "Approved"
+
+        });
+
+        const presentDays = attendance.filter(
+
+            a => a.status === "Present"
+
+        ).length;
+
+        const halfDays = attendance.filter(
+
+            a=>a.status==="Half Day"
+
+        ).length;
+
+        const earnedDays=
+
+            presentDays+
+
+            (halfDays*0.5);
+
+        const attendancePercentage=
+
+            workingDates.length===0
+
+            ?0
+
+            :Math.round(
+
+                (earnedDays/workingDates.length)*100
+
+            );
+
+        const leaveTaken = approvedLeaves.reduce(
+
+            (sum, leave) => sum + leave.days,
+
+            0
+
+        );
+
+        res.json({
+
+            presentDays,
+
+            leaveTaken,
+
+            attendancePercentage,
+
+            salary: employee.salary,
+
+            documents: employee.documents.length
+
+        });
+
+    }
+
+    catch(error){
+
+        res.status(500).json({
+
+            message:error.message
+
+        });
 
     }
 
