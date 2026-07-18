@@ -58,6 +58,7 @@ const empAddress = document.getElementById("empAddress");
 const empStatus = document.getElementById("empStatus");
 const empSalary = document.getElementById("empSalary");
 const empJoiningDate = document.getElementById("empJoiningDate");
+const empEmployeeId = document.getElementById("empEmployeeId");
 
 const docSection = document.getElementById("docSection");
 const docSectionHint = document.getElementById("docSectionHint");
@@ -325,6 +326,8 @@ document.addEventListener("click", async function (e) {
 
     empJoiningDate.value = new Date().toISOString().split("T")[0];
 
+    empEmployeeId.value = generateEmployeeId();
+
     await loadDepartmentsCache();
     populateDepartmentDropdown();
 
@@ -384,18 +387,20 @@ function getEmployeeFormData() {
 
     const data = {
 
-        name: empName.value.trim(),
-        father: empFather.value.trim(),
-        department: empDept.value,
-        designation: empDesig.value.trim(),
-        phone: empPhone.value.trim(),
-        email: empEmail.value.trim(),
-        address: empAddress.value.trim(),
-        status: empStatus.value,
-        salary: Number(empSalary.value) || 0,
-        joiningDate: empJoiningDate.value || ""
+    employeeId: empEmployeeId.value.trim(),
 
-    };
+    name: empName.value.trim(),
+    father: empFather.value.trim(),
+    department: empDept.value,
+    designation: empDesig.value.trim(),
+    phone: empPhone.value.trim(),
+    email: empEmail.value.trim(),
+    address: empAddress.value.trim(),
+    status: empStatus.value,
+    salary: Number(empSalary.value) || 0,
+    joiningDate: empJoiningDate.value || ""
+
+};
 
     // Only send a password if one was typed - on edit, an empty box
     // means "leave the current password alone" (the backend already
@@ -417,6 +422,7 @@ function getEmployeeFormData() {
 
 function fillEmployeeForm(employee) {
 
+    empEmployeeId.value = employee.employeeId || "";
     empName.value = employee.name || "";
     empFather.value = employee.father || "";
     empDept.value = employee.department || "";
@@ -587,8 +593,6 @@ saveBtn.onclick = async function () {
 
         } else {
 
-            data.employeeId = generateEmployeeId();
-
             const result = await apiFetch("/employees", {
 
                 method: "POST",
@@ -653,8 +657,18 @@ function displayEmployees(list = employees) {
             <td>${emp.employeeId}</td>
 
             <td>
-                <strong>${emp.name}</strong><br>
+
+                <span
+                    class="employee-name"
+                    onclick="viewEmployee('${emp._id}')"
+                >
+                    ${emp.name}
+                </span>
+
+                <br>
+
                 <small>${emp.email || "-"}</small>
+
             </td>
 
             <td>${emp.department}</td>
@@ -782,3 +796,268 @@ async function init() {
 }
 
 init();
+
+async function viewEmployee(id){
+
+    try{
+
+        const [employee, profile] = await Promise.all([
+
+            apiFetch(`/employees/${id}`),
+
+            apiFetch(`/employees/${id}/profile`)
+
+        ]);
+
+        document.getElementById("employeeProfile").innerHTML = `
+
+            <div class="employee-profile">
+
+                <div class="profile-header">
+
+                    <i class="fa-solid fa-user profile-avatar"></i>
+
+                    <h2>${employee.name}</h2>
+
+                    <p>${employee.designation}</p>
+
+                    <button
+                        class="profile-edit-btn"
+                        onclick="editEmployeeFromProfile('${employee._id}')">
+
+                        <i class="fa-solid fa-pen"></i>
+
+                        Edit Employee
+
+                    </button>
+
+                </div>
+
+                <div class="profile-stats">
+
+                    <div class="stat-card">
+
+                        <i class="fa-solid fa-calendar-check"></i>
+
+                        <h3>${profile.presentDays}</h3>
+
+                        <span>Present Days</span>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <i class="fa-solid fa-plane-departure"></i>
+
+                        <h3>${profile.leaveTaken}</h3>
+
+                        <span>Leaves Taken</span>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <i class="fa-solid fa-chart-line"></i>
+
+                        <h3>${profile.attendancePercentage}%</h3>
+
+                        <span>Attendance</span>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <i class="fa-solid fa-indian-rupee-sign"></i>
+
+                        <h3>₹${profile.salary}</h3>
+
+                        <span>Salary</span>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <i class="fa-solid fa-folder-open"></i>
+
+                        <h3>${profile.documents}</h3>
+
+                        <span>Documents</span>
+
+                    </div>
+
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Employee ID</span>
+                    <span class="profile-value">${employee.employeeId}</span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Father's Name</span>
+                    <span class="profile-value">${employee.father || "-"}</span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Department</span>
+                    <span class="profile-value">${employee.department}</span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Phone</span>
+                    <span class="profile-value">${employee.phone || "-"}</span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Email</span>
+                    <span class="profile-value">${employee.email || "-"}</span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Address</span>
+                    <span class="profile-value">${employee.address || "-"}</span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Salary</span>
+                    <span class="profile-value">₹${employee.salary || 0}</span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Joining Date</span>
+                    <span class="profile-value">
+                        ${employee.joiningDate
+                            ? new Date(employee.joiningDate).toLocaleDateString()
+                            : "-"}
+                    </span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="profile-label">Status</span>
+                    <span class="profile-value">${employee.status}</span>
+                </div>
+
+                <hr style="margin:25px 0;">
+
+                <h3 style="margin-bottom:15px;">
+
+                    Employee Documents
+
+                    <span
+                        style="
+                        background:#2563eb;
+                        color:white;
+                        padding:3px 10px;
+                        border-radius:20px;
+                        font-size:12px;
+                        margin-left:10px;">
+
+                        ${employee.documents.length}
+
+                    </span>
+
+                </h3>
+
+                <div id="profileDocuments"></div>
+
+            </div>
+
+        `;
+
+        const documentBox = document.getElementById("profileDocuments");
+
+        if(!employee.documents || employee.documents.length===0){
+
+            documentBox.innerHTML = `
+
+                <p class="no-documents">
+
+                    No documents uploaded.
+
+                </p>
+
+            `;
+
+        }
+
+        else{
+
+            documentBox.innerHTML = employee.documents.map(doc=>`
+
+                <div class="profile-document">
+
+                    <div>
+
+                        <div>
+
+                            <i class="fa-solid fa-file-lines"></i>
+
+                            <strong>${doc.label}</strong>
+
+                            <br>
+
+                            <small style="color:#6b7280;">
+
+                                ${doc.originalName}
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <button
+                        class="download-doc-btn"
+                        onclick="downloadEmployeeDocument(
+                            '${employee._id}',
+                            '${doc._id}'
+                        )">
+
+                        <i class="fa-solid fa-download"></i>
+
+                        Download
+
+                    </button>
+
+                </div>
+
+            `).join("");
+
+        }
+
+        document.getElementById("employeeViewModal").style.display = "flex";
+
+    }
+
+    catch(error){
+
+        alert(error.message);
+
+    }
+
+}
+
+function closeEmployeeView(){
+
+    document.getElementById("employeeViewModal").style.display = "none";
+
+}
+
+function editEmployeeFromProfile(id){
+
+    closeEmployeeView();
+
+    editEmployee(id);
+
+}
+
+function downloadEmployeeDocument(employeeId, docId){
+
+    window.open(
+
+        `${API_BASE}/employees/${employeeId}/documents/${docId}`,
+
+        "_blank"
+
+    );
+
+}
