@@ -175,6 +175,17 @@
 
                     <div class="form-group">
 
+                        <label>Employee ID *</label>
+
+                        <input
+                            type="text"
+                            id="empEmployeeId"
+                            placeholder="Employee ID">
+
+                    </div>
+
+                    <div class="form-group">
+
                         <label>Full Name *</label>
                         <input type="text" id="empName" placeholder="Enter full name">
 
@@ -298,6 +309,38 @@
                 <button type="button" class="save-btn" id="saveBtn">
                     Save Employee
                 </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ===================================
+    VIEW EMPLOYEE MODAL
+    =================================== -->
+
+    <div class="modal" id="employeeViewModal">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>Employee Details</h2>
+
+                <button
+                    class="close-btn"
+                    onclick="closeEmployeeView()">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div id="employeeProfile"></div>
 
             </div>
 
