@@ -19,13 +19,72 @@ const departmentFilter  = document.getElementById("departmentFilter");
 const attendanceTable   = document.getElementById("attendanceTable");
 const toastContainer    = document.getElementById("toastContainer");
 
+const tableTab = document.getElementById("tableTab");
+const calendarTab = document.getElementById("calendarTab");
+
+const tableView = document.getElementById("tableView");
+const calendarView = document.getElementById("calendarView");
+
+const calendarGrid = document.getElementById("calendarGrid");
+const calendarMonth = document.getElementById("calendarMonth");
+const calendarYear = document.getElementById("calendarYear");
+const calendarEmployee = document.getElementById("calendarEmployee");
+
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+
+const months = [
+
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+
+];
+
+const attendanceModal = document.getElementById("attendanceModal");
+
+const modalDateTitle = document.getElementById("modalDateTitle");
+
+const modalStatus = document.getElementById("modalStatus");
+
+const modalCheckIn = document.getElementById("modalCheckIn");
+
+const modalCheckOut = document.getElementById("modalCheckOut");
+
+const saveAttendanceModal = document.getElementById("saveAttendanceModal");
+
+const closeAttendanceModal = document.getElementById("closeAttendanceModal");
+
+let selectedCalendarDate = "";
+
+let selectedEmployeeId = "";
+
+const attendanceDate =
+document.getElementById("attendanceDate");
+
 // In-memory copies of what the server returned last.
 
-let employees  = [];
+let employees = [];
+
+// Attendance for the selected date (used by table)
 let attendance = [];
+
+// Attendance for the whole month (used by calendar & statistics)
+let monthlyAttendance = [];
 
 // Today's date (yyyy-mm-dd, used as the date key everywhere)
 const today = new Date().toISOString().split("T")[0];
+
+let selectedAttendanceDate = today;
 
 // Work day length used for overtime calculation (hours).
 // Fetched from the backend once per page load (see refreshAttendance)
@@ -49,10 +108,14 @@ function getStandardWorkHours() {
 // Get today's attendance record for an employee
 // -------------------------------------------
 
-function getTodayRecord(employeeId) {
+function getAttendanceRecord(employeeId){
 
     return attendance.find(record =>
-        (record.employee?._id || record.employee) === employeeId
+
+        (record.employee?._id || record.employee) === employeeId &&
+
+        record.date === selectedAttendanceDate
+
     );
 
 }
@@ -179,7 +242,7 @@ function renderAttendanceTable() {
 
     list.forEach(emp => {
 
-        const record = getTodayRecord(emp._id);
+        const record = getAttendanceRecord(emp._id);
 
         const status   = record?.status   || "Not Marked";
         const checkIn  = record?.checkIn  || "";
@@ -264,10 +327,13 @@ function updateCards() {
 
     totalEmployees.textContent = employees.length;
 
-    presentCount.textContent  = attendance.filter(r => r.status === "Present").length;
-    absentCount.textContent   = attendance.filter(r => r.status === "Absent").length;
-    halfDayCount.textContent  = attendance.filter(r => r.status === "Half Day").length;
-    leaveCount.textContent    = attendance.filter(r => r.status === "Leave").length;
+    presentCount.textContent = attendance.filter(r => r.status === "Present").length;
+
+    absentCount.textContent = attendance.filter(r => r.status === "Absent").length;
+
+    halfDayCount.textContent = attendance.filter(r => r.status === "Half Day").length;
+
+    leaveCount.textContent = attendance.filter(r => r.status === "Leave").length;
 
 }
 
@@ -275,7 +341,19 @@ function updateCards() {
 // Save / Update a Single Attendance Record
 // -------------------------------------------
 
-async function upsertAttendance(employeeId, status, checkIn, checkOut) {
+async function upsertAttendance(
+
+    employeeId,
+
+    status,
+
+    checkIn,
+
+    checkOut,
+
+    date = today
+
+){
 
     const { workingHours, overtime } = calculateHours(checkIn, checkOut);
 
@@ -286,7 +364,7 @@ async function upsertAttendance(employeeId, status, checkIn, checkOut) {
         body: JSON.stringify({
 
             employee: employeeId,
-            date: today,
+            date: date,
             status,
             checkIn: checkIn || "",
             checkOut: checkOut || "",
@@ -309,20 +387,48 @@ async function refreshAttendance() {
 
     try {
 
+        const firstDay =
+        `${currentYear}-${String(currentMonth + 1).padStart(2,"0")}-01`;
+
+        const lastDay =
+        `${currentYear}-${String(currentMonth + 1).padStart(2,"0")}-${String(
+        new Date(currentYear,currentMonth+1,0).getDate()
+        ).padStart(2,"0")}`;
+
         const [employeesData, attendanceData, settingsData] = await Promise.all([
 
             apiFetch("/employees"),
-            apiFetch(`/attendance?date=${today}`),
+
+            apiFetch(`/attendance?from=${firstDay}&to=${lastDay}`),
+
             apiFetch("/settings")
 
         ]);
 
         employees = employeesData;
-        attendance = attendanceData;
+
+        // Monthly attendance for calendar
+        monthlyAttendance = attendanceData;
+
+        // Attendance only for selected day (table)
+        attendance = attendanceData.filter(
+            record => record.date === selectedAttendanceDate
+        );
+        renderCalendar();
         cachedWorkHours = Number(settingsData?.timings?.workHours) || 8;
 
         loadDepartmentFilter();
+
+        loadCalendarEmployees();
+
+        loadMonths();
+
+        loadYears();
+
+        renderCalendar();
+
         renderAttendanceTable();
+
         updateCards();
 
     } catch (error) {
@@ -396,7 +502,7 @@ async function markAll(status) {
 
     const records = list.map(emp => {
 
-        const record = getTodayRecord(emp._id);
+        const record = getAttendanceRecord(emp._id);
 
         const checkIn =
             (status === "Present" || status === "Half Day")
@@ -410,7 +516,7 @@ async function markAll(status) {
         return {
 
             employee: emp._id,
-            date: today,
+            date: selectedAttendanceDate,
             status,
             checkIn,
             checkOut,
@@ -463,7 +569,7 @@ function exportAttendance() {
 
     employees.forEach(emp => {
 
-        const record = getTodayRecord(emp._id);
+        const record = getAttendanceRecord(emp._id);
 
         rows.push([
             emp.employeeId || "",
@@ -513,6 +619,16 @@ attendanceSearch.addEventListener("keyup", renderAttendanceTable);
 
 departmentFilter.addEventListener("change", renderAttendanceTable);
 
+attendanceDate.value = selectedAttendanceDate;
+
+attendanceDate.addEventListener("change", async () => {
+
+    selectedAttendanceDate = attendanceDate.value;
+
+    await refreshAttendance();
+
+});
+
 // Delegated events for dynamically-rendered rows
 
 attendanceTable.addEventListener("click", async function (e) {
@@ -559,7 +675,13 @@ attendanceTable.addEventListener("click", async function (e) {
 
         try {
 
-            await upsertAttendance(employeeId, status, checkIn, checkOut);
+            await upsertAttendance(
+                employeeId,
+                status,
+                checkIn,
+                checkOut,
+                selectedAttendanceDate
+            );
 
             addSystemLog(
                 "Attendance Marked",
@@ -567,7 +689,27 @@ attendanceTable.addEventListener("click", async function (e) {
                 "attendance"
             );
 
-            attendance = await apiFetch(`/attendance?date=${today}`);
+            const firstDay =
+            `${currentYear}-${String(currentMonth+1).padStart(2,"0")}-01`;
+
+            const lastDay =
+            `${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(
+            new Date(currentYear,currentMonth+1,0).getDate()
+            ).padStart(2,"0")}`;
+
+            monthlyAttendance = await apiFetch(
+            `/attendance?from=${firstDay}&to=${lastDay}`
+            );
+
+            attendance = monthlyAttendance.filter(
+            record => record.date === selectedAttendanceDate
+            );
+
+            renderCalendar();
+            renderAttendanceTable();
+            updateCards();
+
+            renderCalendar();
 
             updateCards();
 
@@ -598,6 +740,439 @@ attendanceTable.addEventListener("change", function (e) {
     const row = statusSelect.closest("tr[data-emp-id]");
 
     row.className = statusRowClass(statusSelect.value);
+
+});
+
+function openAttendanceModal(date){
+
+    if(!calendarEmployee.value){
+
+        showToast(
+
+            "Select Employee",
+
+            "Please select an employee first."
+
+        );
+
+        return;
+
+    }
+
+    selectedCalendarDate=date;
+
+    selectedEmployeeId=calendarEmployee.value;
+
+    const record=monthlyAttendance.find(r=>
+
+        r.date===date &&
+
+        String(r.employee?._id||r.employee)===String(selectedEmployeeId)
+
+    );
+
+    modalDateTitle.textContent=date;
+
+    modalStatus.value=record?.status || "Present";
+
+    modalCheckIn.value=record?.checkIn || "";
+
+    modalCheckOut.value=record?.checkOut || "";
+
+    attendanceModal.classList.add("active");
+
+}
+
+closeAttendanceModal.onclick=()=>{
+
+    attendanceModal.classList.remove("active");
+
+};
+
+// ===========================================
+// Attendance Tabs
+// ===========================================
+
+tableTab.addEventListener("click", () => {
+
+    tableTab.classList.add("active");
+    calendarTab.classList.remove("active");
+
+    tableView.style.display = "block";
+    calendarView.style.display = "none";
+
+});
+
+calendarTab.addEventListener("click", () => {
+
+    calendarTab.classList.add("active");
+    tableTab.classList.remove("active");
+
+    tableView.style.display = "none";
+    calendarView.style.display = "block";
+
+});
+
+function renderCalendar(){
+
+    calendarGrid.innerHTML="";
+
+    const firstDay=new Date(currentYear,currentMonth,1).getDay();
+
+    const totalDays=new Date(currentYear,currentMonth+1,0).getDate();
+
+    const todayDate=new Date();
+
+    for(let i=0;i<firstDay;i++){
+
+        const empty=document.createElement("div");
+
+        empty.className="calendar-day empty-day";
+
+        calendarGrid.appendChild(empty);
+
+    }
+
+    for(let day=1;day<=totalDays;day++){
+
+        const dateString=
+        currentYear+"-"+
+        String(currentMonth+1).padStart(2,"0")+"-"+
+        String(day).padStart(2,"0");
+
+        const cell=document.createElement("div");
+
+        cell.className="calendar-day";
+
+        const record = monthlyAttendance.find(r=>{
+
+            return r.date===dateString &&
+            (!calendarEmployee.value ||
+            String(r.employee?._id||r.employee)===String(calendarEmployee.value));
+
+        });
+
+        if(record){
+
+            switch(record.status){
+
+                case "Present":
+
+                    cell.classList.add("present");
+
+                    break;
+
+                case "Absent":
+
+                    cell.classList.add("absent");
+
+                    break;
+
+                case "Half Day":
+
+                    cell.classList.add("halfday");
+
+                    break;
+
+                case "Leave":
+
+                    cell.classList.add("leave");
+
+                    break;
+
+            }
+
+        }
+
+        const current=new Date(currentYear,currentMonth,day);
+
+        if(current.getDay()===0){
+
+            cell.classList.add("weeklyoff");
+
+        }
+
+        if(
+
+            day===todayDate.getDate() &&
+
+            currentMonth===todayDate.getMonth() &&
+
+            currentYear===todayDate.getFullYear()
+
+        ){
+
+            cell.classList.add("today");
+
+        }
+
+        let badgeHTML="";
+
+        if(record){
+
+            switch(record.status){
+
+                case "Present":
+
+                    badgeHTML='<div class="status-badge badge-present">P</div>';
+
+                    break;
+
+                case "Absent":
+
+                    badgeHTML='<div class="status-badge badge-absent">A</div>';
+
+                    break;
+
+                case "Half Day":
+
+                    badgeHTML='<div class="status-badge badge-halfday">HD</div>';
+
+                    break;
+
+                case "Leave":
+
+                    badgeHTML='<div class="status-badge badge-leave">L</div>';
+
+                    break;
+
+            }
+
+        }
+
+        else if(current.getDay()===0){
+
+            badgeHTML='<div class="status-badge badge-weeklyoff">WO</div>';
+
+        }
+
+        cell.innerHTML=`
+
+        <div class="day-number">
+
+        ${day}
+
+        </div>
+
+        ${badgeHTML}
+
+        `;
+
+        cell.dataset.date = dateString;
+
+        cell.addEventListener("click",()=>{
+
+            openAttendanceModal(dateString);
+
+        });
+
+        calendarGrid.appendChild(cell);
+
+    }
+
+}
+
+function loadMonths(){
+
+    calendarMonth.innerHTML="";
+
+    months.forEach((month,index)=>{
+
+        calendarMonth.innerHTML+=`
+
+        <option value="${index}">
+
+            ${month}
+
+        </option>
+
+        `;
+
+    });
+
+    calendarMonth.value=currentMonth;
+
+}
+
+function loadYears(){
+
+    calendarYear.innerHTML="";
+
+    const current = new Date().getFullYear();
+
+    for(let year=current-5;year<=current+5;year++){
+
+        calendarYear.innerHTML+=`
+
+        <option value="${year}">
+
+            ${year}
+
+        </option>
+
+        `;
+
+    }
+
+    calendarYear.value=currentYear;
+
+}
+
+calendarEmployee.addEventListener("change",()=>{
+
+    renderCalendar();
+
+});
+
+function loadCalendarEmployees(){
+
+    calendarEmployee.innerHTML=`
+        <option value="">Select Employee</option>
+    `;
+
+    employees.forEach(emp=>{
+
+        calendarEmployee.innerHTML+=`
+
+        <option value="${emp._id}">
+
+            ${emp.name}
+
+        </option>
+
+        `;
+
+    });
+
+}
+
+calendarMonth.addEventListener("change",()=>{
+
+    currentMonth=Number(calendarMonth.value);
+
+    renderCalendar();
+
+});
+
+calendarYear.addEventListener("change",()=>{
+
+    currentYear=Number(calendarYear.value);
+
+    renderCalendar();
+
+});
+
+document.getElementById("prevMonth").addEventListener("click",()=>{
+
+    currentMonth--;
+
+    if(currentMonth<0){
+
+        currentMonth=11;
+
+        currentYear--;
+
+    }
+
+    loadYears();
+
+    calendarMonth.value=currentMonth;
+
+    calendarYear.value=currentYear;
+
+    renderCalendar();
+
+});
+
+document.getElementById("nextMonth").addEventListener("click",()=>{
+
+    currentMonth++;
+
+    if(currentMonth>11){
+
+        currentMonth=0;
+
+        currentYear++;
+
+    }
+
+    loadYears();
+
+    calendarMonth.value=currentMonth;
+
+    calendarYear.value=currentYear;
+
+    renderCalendar();
+
+});
+
+// ===========================================
+// SAVE ATTENDANCE FROM CALENDAR MODAL
+// ===========================================
+
+saveAttendanceModal.addEventListener("click", async () => {
+
+    try {
+
+        await upsertAttendance(
+
+            selectedEmployeeId,
+
+            modalStatus.value,
+
+            modalCheckIn.value,
+
+            modalCheckOut.value,
+
+            selectedCalendarDate
+
+        );
+
+        const firstDay =
+        `${currentYear}-${String(currentMonth+1).padStart(2,"0")}-01`;
+
+        const lastDay =
+        `${currentYear}-${String(currentMonth+1).padStart(2,"0")}-${String(new Date(currentYear,currentMonth+1,0).getDate()).padStart(2,"0")}`;
+
+        monthlyAttendance = await apiFetch(
+        `/attendance?from=${firstDay}&to=${lastDay}`
+        );
+
+        attendance = monthlyAttendance.filter(
+        record => record.date === selectedAttendanceDate
+        );
+
+        renderCalendar();
+
+        renderAttendanceTable();
+
+        updateCards();
+
+        attendanceModal.classList.remove("active");
+
+        showToast(
+
+            "Attendance Updated",
+
+            "Attendance has been updated successfully."
+
+        );
+
+    }
+
+    catch(error){
+
+        showToast(
+
+            "Update Failed",
+
+            error.message,
+
+            true
+
+        );
+
+    }
 
 });
 
