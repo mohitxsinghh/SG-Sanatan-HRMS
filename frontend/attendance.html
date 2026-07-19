@@ -137,6 +137,18 @@
 
                         </select>
 
+                        <div class="date-filter">
+
+                            <label for="attendanceDate">
+                                Attendance Date
+                            </label>
+
+                            <input
+                                type="date"
+                                id="attendanceDate">
+
+                        </div>
+
                     </div>
 
                     <div class="toolbar-right">
@@ -190,45 +202,242 @@
 
                 </div>
 
-                <!-- Table -->
+                <!-- ==========================================
+                Attendance View Tabs
+                ========================================== -->
 
-                <div class="table-container">
+                <div class="attendance-tabs">
 
-                    <table>
+                    <button
+                        id="tableTab"
+                        class="tab-btn active">
 
-                        <thead>
+                        <i class="fa-solid fa-table"></i>
 
-                            <tr>
+                        Attendance Table
 
-                                <th>Employee</th>
+                    </button>
 
-                                <th>Department</th>
+                    <button
+                        id="calendarTab"
+                        class="tab-btn">
 
-                                <th>Status</th>
+                        <i class="fa-solid fa-calendar-days"></i>
 
-                                <th>Check In</th>
+                        Monthly Calendar
 
-                                <th>Check Out</th>
-
-                                <th>Action</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="attendanceTable">
-
-                            <tr><td colspan="6">Loading attendance...</td></tr>
-
-                        </tbody>
-
-                    </table>
+                    </button>
 
                 </div>
-            
+
+                <!-- ==========================================
+                Table View
+                ========================================== -->
+
+                <div id="tableView">
+
+
+                    <!-- Table -->
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Employee</th>
+
+                                    <th>Department</th>
+
+                                    <th>Status</th>
+
+                                    <th>Check In</th>
+
+                                    <th>Check Out</th>
+
+                                    <th>Action</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="attendanceTable">
+
+                                <tr><td colspan="6">Loading attendance...</td></tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+                
+                <!-- ==========================================
+                Calendar View
+                ========================================== -->
+
+                <div id="calendarView" style="display:none;">
+
+                    <!-- Calendar Header -->
+
+                    <div class="calendar-toolbar">
+
+                        <div class="calendar-left">
+
+                            <label>Employee</label>
+
+                            <select id="calendarEmployee">
+                                <option value="">Select Employee</option>
+                            </select>
+
+                        </div>
+
+                        <div class="calendar-middle">
+
+                            <button id="prevMonth" class="calendar-nav">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+
+                            <select id="calendarMonth"></select>
+
+                            <select id="calendarYear"></select>
+
+                            <button id="nextMonth" class="calendar-nav">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Calendar -->
+
+                    <div class="calendar-container">
+
+                        <div class="calendar-weekdays">
+
+                            <div>Sun</div>
+                            <div>Mon</div>
+                            <div>Tue</div>
+                            <div>Wed</div>
+                            <div>Thu</div>
+                            <div>Fri</div>
+                            <div>Sat</div>
+
+                        </div>
+
+                        <div id="calendarGrid" class="calendar-grid">
+
+                        </div>
+
+                    </div>
+
+                    <!-- Legend -->
+
+                    <div class="calendar-legend">
+
+                        <div><span class="legend present"></span> Present</div>
+
+                        <div><span class="legend absent"></span> Absent</div>
+
+                        <div><span class="legend halfday"></span> Half Day</div>
+
+                        <div><span class="legend leave"></span> Leave</div>
+
+                        <div><span class="legend holiday"></span> Holiday</div>
+
+                        <div><span class="legend weeklyoff"></span> Weekly Off</div>
+
+                    </div>
+
+                </div>
+
             </div>
 
         </main>
+
+    </div>
+
+    <!-- ==========================================
+    Attendance Details Modal
+    ========================================== -->
+
+    <div id="attendanceModal" class="attendance-modal">
+
+        <div class="attendance-modal-content">
+
+            <div class="attendance-modal-header">
+
+                <h2 id="modalDateTitle">
+                    Attendance Details
+                </h2>
+
+                <button id="closeAttendanceModal">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+            </div>
+
+            <div class="attendance-modal-body">
+
+                <div class="form-group">
+
+                    <label>Status</label>
+
+                    <select id="modalStatus">
+
+                        <option>Present</option>
+
+                        <option>Absent</option>
+
+                        <option>Half Day</option>
+
+                        <option>Leave</option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Check In</label>
+
+                    <input
+                        type="time"
+                        id="modalCheckIn">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Check Out</label>
+
+                    <input
+                        type="time"
+                        id="modalCheckOut">
+
+                </div>
+
+            </div>
+
+            <div class="attendance-modal-footer">
+
+                <button
+                    id="saveAttendanceModal"
+                    class="btn-present">
+
+                    Save Changes
+
+                </button>
+
+            </div>
+
+        </div>
 
     </div>
 
