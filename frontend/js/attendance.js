@@ -229,7 +229,7 @@ function renderAttendanceTable() {
         attendanceTable.innerHTML = `
 
         <tr>
-            <td colspan="6" class="empty">No employees found.</td>
+            <td colspan="8" class="empty">No employees found.</td>
         </tr>
 
         `;
@@ -247,6 +247,8 @@ function renderAttendanceTable() {
         const status   = record?.status   || "Not Marked";
         const checkIn  = record?.checkIn  || "";
         const checkOut = record?.checkOut || "";
+        const workingHours = record?.workingHours ?? 0;
+        const overtime      = record?.overtime ?? 0;
 
         rows += `
 
@@ -300,6 +302,10 @@ function renderAttendanceTable() {
                 </div>
 
             </td>
+
+            <td>${workingHours}h</td>
+
+            <td class="${overtime > 0 ? "overtime-value" : ""}">${overtime}h</td>
 
             <td>
 
@@ -383,7 +389,7 @@ async function upsertAttendance(
 
 async function refreshAttendance() {
 
-    attendanceTable.innerHTML = `<tr><td colspan="6">Loading attendance...</td></tr>`;
+    attendanceTable.innerHTML = `<tr><td colspan="8">Loading attendance...</td></tr>`;
 
     try {
 
@@ -433,7 +439,7 @@ async function refreshAttendance() {
 
     } catch (error) {
 
-        attendanceTable.innerHTML = `<tr><td colspan="6">Failed to load: ${error.message}</td></tr>`;
+        attendanceTable.innerHTML = `<tr><td colspan="8">Failed to load: ${error.message}</td></tr>`;
 
         showToast("Load Failed", error.message, true);
 
@@ -779,9 +785,32 @@ function openAttendanceModal(date){
 
     modalCheckOut.value=record?.checkOut || "";
 
+    updateModalHoursReadout();
+
     attendanceModal.classList.add("active");
 
 }
+
+// Live preview of what Working Hours/Overtime will be saved as,
+// recalculated the same way upsertAttendance() actually computes it -
+// so Admin can see the effect of a Check In/Out edit before saving.
+
+function updateModalHoursReadout(){
+
+    const { workingHours, overtime } = calculateHours(modalCheckIn.value, modalCheckOut.value);
+
+    document.getElementById("modalWorkingHours").textContent = `${workingHours}h`;
+
+    const overtimeEl = document.getElementById("modalOvertime");
+
+    overtimeEl.textContent = `${overtime}h`;
+
+    overtimeEl.classList.toggle("has-overtime", overtime > 0);
+
+}
+
+modalCheckIn.addEventListener("input", updateModalHoursReadout);
+modalCheckOut.addEventListener("input", updateModalHoursReadout);
 
 closeAttendanceModal.onclick=()=>{
 
@@ -1171,6 +1200,67 @@ saveAttendanceModal.addEventListener("click", async () => {
             true
 
         );
+
+    }
+
+});
+
+// ===========================================
+// RECALCULATE PAST HOURS/OVERTIME
+// One-time action: rewrites workingHours/overtime on every attendance
+// record that has both a Check In and Check Out, using whatever the
+// "Standard Work Hours / Day" setting is RIGHT NOW. Needed whenever
+// that setting is changed, since past records don't update on their
+// own - they keep whatever they were computed with at the time.
+// ===========================================
+
+const recalculateHoursBtn = document.getElementById("recalculateHoursBtn");
+
+recalculateHoursBtn?.addEventListener("click", async () => {
+
+    const confirmed = confirm(
+
+        `This will recompute Working Hours and Overtime for every past attendance record ` +
+        `that has both a Check In and Check Out, using the CURRENT standard work hours ` +
+        `(${cachedWorkHours}h/day from Settings). This cannot be undone. Continue?`
+
+    );
+
+    if (!confirmed) return;
+
+    recalculateHoursBtn.disabled = true;
+
+    const originalText = recalculateHoursBtn.innerHTML;
+
+    recalculateHoursBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Recalculating...`;
+
+    try {
+
+        const result = await apiFetch("/attendance/recalculate-hours", { method: "POST" });
+
+        showToast("Recalculated", result.message);
+
+        addSystemLog(
+
+            "Attendance Recalculated",
+
+            result.message,
+
+            "attendance"
+
+        );
+
+        await refreshAttendance();
+
+    } catch (error) {
+
+        showToast("Recalculate Failed", error.message, true);
+
+    } finally {
+
+        recalculateHoursBtn.disabled = false;
+
+        recalculateHoursBtn.innerHTML = originalText;
 
     }
 
