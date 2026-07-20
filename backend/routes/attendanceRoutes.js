@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 const Attendance = require("../models/Attendance");
+const Settings = require("../models/Settings");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 // GET Attendance
@@ -18,7 +19,10 @@ router.get("/", protect, async (req, res) => {
 
     try {
 
-        const { date, from, to } = req.query;
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+        const { date, from, to, employee } = req.query;
 
         let filter;
 
@@ -28,13 +32,17 @@ router.get("/", protect, async (req, res) => {
 
         } else {
 
-            filter = { date: date || new Date().toISOString().split("T")[0] };
+            filter = { date: date || todayStr };
 
         }
 
         if (req.user.role === "Employee") {
 
-            filter.employee = req.user.id;
+            filter.employee = req.user.id; // Employees are always scoped to themselves, no matter what
+
+        } else if (employee) {
+
+            filter.employee = employee; // Admin can optionally scope to one employee (used by the Calendar view)
 
         }
 
@@ -190,6 +198,87 @@ router.post("/bulk", protect, authorizeRoles("Admin"), async (req, res) => {
     } catch (error) {
 
         res.status(400).json({ message: error.message });
+
+    }
+
+});
+
+// RECALCULATE PAST HOURS/OVERTIME (Admin only)
+// Whenever the "Standard Work Hours / Day" setting changes, every
+// past attendance record that was already saved keeps whatever
+// workingHours/overtime it was computed with AT THE TIME - it doesn't
+// retroactively update on its own. This lets Admin explicitly
+// recompute every record that has both a Check In and Check Out,
+// using whatever the standard work hours setting is RIGHT NOW.
+
+router.post("/recalculate-hours", protect, authorizeRoles("Admin"), async (req, res) => {
+
+    try {
+
+        const settings = await Settings.findOne();
+
+        const standardHours = Number(settings?.timings?.workHours) || 8;
+
+        const records = await Attendance.find({
+
+            checkIn: { $ne: "" },
+            checkOut: { $ne: "" }
+
+        });
+
+        if (records.length === 0) {
+
+            return res.json({
+
+                message: "No records with both Check In and Check Out to recalculate.",
+
+                count: 0
+
+            });
+
+        }
+
+        const operations = records.map(r => {
+
+            const [inH, inM] = r.checkIn.split(":").map(Number);
+            const [outH, outM] = r.checkOut.split(":").map(Number);
+
+            let minutes = (outH * 60 + outM) - (inH * 60 + inM);
+
+            if (minutes < 0) minutes = 0;
+
+            const totalHours = minutes / 60;
+
+            const workingHours = Math.round(Math.min(totalHours, standardHours) * 100) / 100;
+            const overtime = Math.round(Math.max(totalHours - standardHours, 0) * 100) / 100;
+
+            return {
+
+                updateOne: {
+
+                    filter: { _id: r._id },
+
+                    update: { workingHours, overtime }
+
+                }
+
+            };
+
+        });
+
+        await Attendance.bulkWrite(operations);
+
+        res.json({
+
+            message: `Recalculated ${operations.length} attendance record(s) using ${standardHours}h as the standard work day.`,
+
+            count: operations.length
+
+        });
+
+    } catch (error) {
+
+        res.status(500).json({ message: error.message });
 
     }
 
