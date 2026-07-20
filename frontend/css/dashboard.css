@@ -545,3 +545,43 @@
     background:var(--status-absent-soft);
     color:var(--status-absent);
 }
+
+/* ==========================================
+   SALARY SUMMARY CARD (Employee Dashboard)
+========================================== */
+
+.salary-summary-list{
+    list-style:none;
+}
+
+.salary-summary-list li{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:13px 0;
+    border-bottom:1px solid var(--border);
+    font-size:14px;
+    color:var(--text-secondary);
+    font-weight:600;
+}
+
+.salary-summary-list li:last-child{
+    border-bottom:none;
+}
+
+.salary-summary-list li strong{
+    font-family:var(--font-display);
+    font-size:16px;
+    color:var(--text-primary);
+}
+
+.salary-summary-list li.salary-net-row{
+    margin-top:6px;
+    padding-top:18px;
+    border-top:2px solid var(--border);
+}
+
+.salary-summary-list li.salary-net-row strong{
+    font-size:20px;
+    color:var(--gold-deep);
+}
