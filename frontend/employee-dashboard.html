@@ -87,11 +87,11 @@
 
                 <div class="stat-card">
 
-                    <i class="fa-solid fa-plane-departure"></i>
+                    <i class="fa-solid fa-business-time"></i>
 
                     <div>
-                        <h2 id="leaveDaysLeft">0</h2>
-                        <p>Leave Days Remaining</p>
+                        <h2 id="monthOvertimeHours">0h</h2>
+                        <p>Overtime This Month</p>
                     </div>
 
                 </div>
@@ -170,15 +170,28 @@
 
                 </div>
 
-                <!-- Leave Balance -->
+                <!-- Salary Summary -->
 
                 <div class="dashboard-section">
 
-                    <h2>My Leave Balance</h2>
+                    <h2><i class="fa-solid fa-sack-dollar"></i> Salary Summary</h2>
 
-                    <ul class="recent-list" id="leaveBalanceList">
+                    <ul class="salary-summary-list">
 
-                        <!-- Dynamic -->
+                        <li>
+                            <span>Current Salary</span>
+                            <strong id="salaryCurrentAmount">₹0</strong>
+                        </li>
+
+                        <li>
+                            <span>Overtime</span>
+                            <strong id="salaryOvertimeAmount">₹0</strong>
+                        </li>
+
+                        <li class="salary-net-row">
+                            <span>Net Pay</span>
+                            <strong id="salaryNetAmount">₹0</strong>
+                        </li>
 
                     </ul>
 
