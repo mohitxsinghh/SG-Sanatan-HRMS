@@ -137,66 +137,53 @@
 
                         </select>
 
-                        <div class="date-filter">
-
-                            <label for="attendanceDate">
-                                Attendance Date
-                            </label>
-
-                            <input
-                                type="date"
-                                id="attendanceDate">
-
-                        </div>
-
                     </div>
 
                     <div class="toolbar-right">
 
-                        <button class="btn-present"
-                            onclick="markAll('Present')">
+                        <div class="attendance-actions">
 
-                            <i class="fa-solid fa-check"></i>
+                            <div class="date-filter">
 
-                            Present
+                                <label>Attendance Date</label>
 
-                        </button>
+                                <input type="date" id="attendanceDate">
 
-                        <button class="btn-absent"
-                            onclick="markAll('Absent')">
+                            </div>
 
-                            <i class="fa-solid fa-xmark"></i>
+                            <div class="attendance-status-buttons">
 
-                            Absent
+                                <button class="btn-present" onclick="markAll('Present')">
+                                    ✓ Present
+                                </button>
 
-                        </button>
+                                <button class="btn-absent" onclick="markAll('Absent')">
+                                    ✕ Absent
+                                </button>
 
-                        <button class="btn-halfday"
-                            onclick="markAll('Half Day')">
+                                <button class="btn-halfday" onclick="markAll('Half Day')">
+                                    ◐ Half Day
+                                </button>
 
-                            <i class="fa-solid fa-clock"></i>
+                                <button class="btn-leave" onclick="markAll('Leave')">
+                                    🗓 Leave
+                                </button>
 
-                            Half Day
+                            </div>
 
-                        </button>
+                            <div class="attendance-bottom-buttons">
 
-                        <button class="btn-leave"
-                            onclick="markAll('Leave')">
+                                <button class="btn-export" onclick="exportAttendance()">
+                                    Export
+                                </button>
 
-                            <i class="fa-solid fa-calendar-minus"></i>
+                                <button class="btn-recalculate" id="recalculateHoursBtn">
+                                    Recalculate Hours
+                                </button>
 
-                            Leave
+                            </div>
 
-                        </button>
-
-                        <button class="btn-export"
-                            onclick="exportAttendance()">
-
-                            <i class="fa-solid fa-file-export"></i>
-
-                            Export
-
-                        </button>
+                        </div>
 
                     </div>
 
@@ -257,6 +244,10 @@
 
                                     <th>Check Out</th>
 
+                                    <th>Working Hrs</th>
+
+                                    <th>Overtime</th>
+
                                     <th>Action</th>
 
                                 </tr>
@@ -265,7 +256,7 @@
 
                             <tbody id="attendanceTable">
 
-                                <tr><td colspan="6">Loading attendance...</td></tr>
+                                <tr><td colspan="8">Loading attendance...</td></tr>
 
                             </tbody>
 
@@ -420,6 +411,20 @@
                     <input
                         type="time"
                         id="modalCheckOut">
+
+                </div>
+
+                <div class="modal-hours-readout" id="modalHoursReadout">
+
+                    <div>
+                        <span>Working Hours</span>
+                        <strong id="modalWorkingHours">0h</strong>
+                    </div>
+
+                    <div>
+                        <span>Overtime</span>
+                        <strong id="modalOvertime">0h</strong>
+                    </div>
 
                 </div>
 
