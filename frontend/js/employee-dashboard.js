@@ -66,12 +66,70 @@ function loadMonthAndRecent(recentRecords) {
 
 }
 
-// NOTE: loadLeaveBalance() was removed along with leave balances
-// (pay is now deduction-based on Attendance - see the Payroll work
-// discussed earlier). The "Leave Days Remaining" stat card + "My
-// Leave Balance" list in employee-dashboard.html still need to be
-// replaced with a "This Month's Deduction" card once the Payroll
-// endpoint is built - that part is still pending.
+// ==========================================
+// Salary Summary
+// - Current Salary: this month's Payroll Net Payable (salary AFTER
+//   attendance deductions - Present/Half Day/Absent/Leave/Unmarked,
+//   Holidays paid) - comes straight from the Payroll endpoint, which
+//   already does this calculation correctly.
+// - Overtime: this month's total overtime hours (summed from
+//   Attendance), converted to rupees at (Daily Rate ÷ standard work
+//   hours) per hour.
+// - Net Pay: Current Salary (post-deduction) + Overtime.
+// The same overtime-hours total also feeds the "Overtime This Month"
+// stat card at the top of the page, so it's computed once here.
+// ==========================================
+
+async function loadSalarySummary() {
+
+    try {
+
+        const currentMonth = today.slice(0, 7);
+        const monthStart = today.slice(0, 8) + "01"; // "yyyy-mm-01", pure string - no Date/toISOString involved
+
+        const [payrollData, settings, monthRecords] = await Promise.all([
+
+            apiFetch(`/payroll?month=${currentMonth}`),
+            apiFetch("/settings"),
+            apiFetch(`/attendance?from=${monthStart}&to=${today}`)
+
+        ]);
+
+        const myPayroll = payrollData?.results?.[0] || {};
+
+        const netPayable = Number(myPayroll.netPayable) || 0;
+
+        const dailyRate = Number(myPayroll.dailyRate) || 0;
+
+        const standardWorkHours = Number(settings?.timings?.workHours) || 8;
+
+        const hourlyRate = standardWorkHours > 0 ? dailyRate / standardWorkHours : 0;
+
+        const totalOvertimeHours = monthRecords.reduce((sum, r) => sum + (Number(r.overtime) || 0), 0);
+
+        const overtimePay = totalOvertimeHours * hourlyRate;
+
+        const netPay = netPayable + overtimePay;
+
+        document.getElementById("salaryCurrentAmount").textContent = "₹" + Math.round(netPayable).toLocaleString("en-IN");
+        document.getElementById("salaryOvertimeAmount").textContent = "₹" + Math.round(overtimePay).toLocaleString("en-IN");
+        document.getElementById("salaryNetAmount").textContent = "₹" + Math.round(netPay).toLocaleString("en-IN");
+
+        const overtimeStatEl = document.getElementById("monthOvertimeHours");
+
+        if (overtimeStatEl) {
+
+            overtimeStatEl.textContent = `${Math.round(totalOvertimeHours * 10) / 10}h`;
+
+        }
+
+    } catch (error) {
+
+        console.error("Failed to load salary summary:", error.message);
+
+    }
+
+}
 
 // ==========================================
 // Next Holiday
@@ -167,6 +225,8 @@ async function init() {
         loadMonthAndRecent(recentRecords);
         loadNextHoliday(holidays);
         loadNotices(notices);
+
+        loadSalarySummary(); // separate try/catch inside - won't block the rest of the dashboard if it fails
 
     } catch (error) {
 
