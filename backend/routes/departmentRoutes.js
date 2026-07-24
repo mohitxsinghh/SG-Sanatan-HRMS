@@ -55,11 +55,15 @@ router.post("/", protect, authorizeRoles("Admin"), async (req, res) => {
 
         if (error.code === 11000) {
 
-            return res.status(400).json({
+            const field = Object.keys(error.keyValue || {})[0];
 
-                message: "A department with this name already exists"
+            const message = field === "deptId"
 
-            });
+                ? "That department code was already in use - please try saving again"
+
+                : "A department with this name already exists";
+
+            return res.status(400).json({ message });
 
         }
 
@@ -127,11 +131,15 @@ router.put("/:id", protect, authorizeRoles("Admin"), async (req, res) => {
 
         if (error.code === 11000) {
 
-            return res.status(400).json({
+            const field = Object.keys(error.keyValue || {})[0];
 
-                message: "A department with this name already exists"
+            const message = field === "deptId"
 
-            });
+                ? "That department code was already in use - please try saving again"
+
+                : "A department with this name already exists";
+
+            return res.status(400).json({ message });
 
         }
 
