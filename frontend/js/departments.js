@@ -202,11 +202,27 @@ function getDepartmentFormData() {
 
 // ==========================
 // Generate Department Code
+// Finds the highest existing DEPT number and increments it - using
+// departments.length instead breaks the moment any department is
+// ever deleted (a gap in the sequence causes the next generated code
+// to collide with one that already exists, which MongoDB then
+// rejects as a duplicate - confusingly surfaced as "already exists"
+// even though the NAME you typed was never used before).
 // ==========================
 
 function generateDeptId() {
 
-    return "DEPT" + String(departments.length + 1).padStart(3, "0");
+    const highestNumber = departments.reduce((max, dept) => {
+
+        const match = /^DEPT(\d+)$/.exec(dept.deptId || "");
+
+        const num = match ? parseInt(match[1], 10) : 0;
+
+        return Math.max(max, num);
+
+    }, 0);
+
+    return "DEPT" + String(highestNumber + 1).padStart(3, "0");
 
 }
 
@@ -249,6 +265,7 @@ async function loadDepartments() {
 saveBtn.onclick = async function () {
 
     const data = getDepartmentFormData();
+    departments = await apiFetch("/departments");
 
     if (data.name === "") {
 
@@ -262,7 +279,7 @@ saveBtn.onclick = async function () {
 
     const duplicate = departments.find(dept =>
 
-        dept.name.toLowerCase() === data.name.toLowerCase() &&
+        dept.name.trim().toLowerCase() === data.name.trim().toLowerCase() &&
         dept._id !== editDepartmentId
 
     );
