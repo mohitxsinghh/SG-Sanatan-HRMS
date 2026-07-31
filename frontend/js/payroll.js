@@ -65,7 +65,7 @@ async function loadPayroll() {
 
     if (!month) return;
 
-    payrollTable.innerHTML = `<tr><td colspan="12">Loading...</td></tr>`;
+    payrollTable.innerHTML = `<tr><td colspan="14">Loading...</td></tr>`;
 
     try {
 
@@ -77,14 +77,14 @@ async function loadPayroll() {
         document.getElementById("payrollWorkingDays").textContent = data.workingDays;
 
         const totalDeduction = data.results.reduce((sum, r) => sum + r.deduction, 0);
-        const totalPayable = data.results.reduce((sum, r) => sum + r.netPayable, 0);
 
         document.getElementById("payrollTotalDeduction").textContent = formatRupees(totalDeduction);
-        document.getElementById("payrollTotalPayable").textContent = formatRupees(totalPayable);
+        document.getElementById("payrollTotalOvertime").textContent = formatRupees(data.totalOvertimePay);
+        document.getElementById("payrollTotalPayable").textContent = formatRupees(data.totalPayableWithOvertime);
 
         if (data.results.length === 0) {
 
-            payrollTable.innerHTML = `<tr><td colspan="12" class="empty">No employees found.</td></tr>`;
+            payrollTable.innerHTML = `<tr><td colspan="14" class="empty">No employees found.</td></tr>`;
 
             return;
 
@@ -104,14 +104,16 @@ async function loadPayroll() {
                 <td>${r.holiday}</td>
                 <td>${formatRupees(r.dailyRate)}</td>
                 <td>${formatRupees(r.deduction)}</td>
-                <td><strong>${formatRupees(r.netPayable)}</strong></td>
+                <td>${formatRupees(r.netPayable)}</td>
+                <td>${r.overtimeHours > 0 ? formatRupees(r.overtimePay) + ` <small>(${r.overtimeHours}h)</small>` : formatRupees(0)}</td>
+                <td><strong>${formatRupees(r.totalPayable)}</strong></td>
             </tr>
 
         `).join("");
 
     } catch (error) {
 
-        payrollTable.innerHTML = `<tr><td colspan="12">Failed to load: ${error.message}</td></tr>`;
+        payrollTable.innerHTML = `<tr><td colspan="14">Failed to load: ${error.message}</td></tr>`;
 
         showToast("Load Failed", error.message, true);
 
@@ -143,7 +145,10 @@ document.getElementById("exportPayrollBtn").addEventListener("click", () => {
         r.deductedDays,
         r.dailyRate,
         r.deduction,
-        r.netPayable
+        r.netPayable,
+        r.overtimeHours,
+        r.overtimePay,
+        r.totalPayable
 
     ]);
 
@@ -163,7 +168,10 @@ document.getElementById("exportPayrollBtn").addEventListener("click", () => {
         "Deducted Days",
         "Daily Rate",
         "Deduction",
-        "Net Payable"
+        "Net Payable",
+        "Overtime Hours",
+        "Overtime Pay",
+        "Total Payable"
 
     ];
 
