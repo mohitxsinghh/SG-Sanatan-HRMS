@@ -5,6 +5,7 @@ const router = express.Router();
 const Employee = require("../models/Employee");
 const Attendance = require("../models/Attendance");
 const Holiday = require("../models/Holiday");
+const Settings = require("../models/Settings");
 const { protect } = require("../middleware/authMiddleware");
 
 router.use(protect);
@@ -37,6 +38,17 @@ router.use(protect);
 //      Paid Holidays +
 //      Present +
 //      (Half Day × 0.5)
+//
+// 8. Overtime (on top of Net Payable, not part of the deduction math):
+//      - On a normal working day: any hours worked beyond Standard
+//        Work Hours/Day (from Settings) count as overtime, same as
+//        Attendance already tracks per record.
+//      - On a Sunday: Sunday isn't a working day at all, so if an
+//        employee has attendance that day, EVERY hour worked counts
+//        as overtime (not just hours beyond standard).
+//      - Overtime Pay = Total Overtime Hours × (Daily Rate ÷ Standard
+//        Work Hours/Day).
+//      - Total Payable = Net Payable + Overtime Pay.
 //
 // ===========================================
 
@@ -124,7 +136,10 @@ router.get("/", async (req, res) => {
                     notMarked: 0,
                     holiday: 0,
                     deduction: 0,
-                    netPayable: emp.salary
+                    netPayable: emp.salary,
+                    overtimeHours: 0,
+                    overtimePay: 0,
+                    totalPayable: emp.salary
 
                 }))
 
@@ -153,6 +168,10 @@ router.get("/", async (req, res) => {
             : await Employee.find();
 
         const attendanceRecords = await Attendance.find({ date: { $gte: firstDay, $lte: lastDay } });
+
+        const settings = await Settings.findOne();
+
+        const standardWorkHours = Number(settings?.timings?.workHours) || 8;
 
         const results = employees.map(emp => {
 
@@ -215,6 +234,47 @@ router.get("/", async (req, res) => {
             const netPayable =
                 Math.round(earnedDays * dailyRate * 100) / 100;
 
+            // =========================
+            // Overtime (separate from the deduction math above -
+            // this ADDS to what's earned, never subtracts)
+            // =========================
+
+            // Regular overtime: hours beyond standard on normal
+            // working days, exactly as Attendance already tracks it.
+
+            const regularOvertimeHours = empRecords.reduce((sum, r) =>
+
+                sum + (Number(r.overtime) || 0)
+
+            , 0);
+
+            // Sunday duty: this employee's own records that fall on a
+            // Sunday with a Check In - EVERY hour worked that day is
+            // overtime, not just hours beyond standard, since Sunday
+            // isn't a working day at all.
+
+            const sundayRecords = attendanceRecords.filter(r =>
+
+                r.employee.toString() === emp._id.toString() &&
+                isSunday(r.date) &&
+                r.checkIn
+
+            );
+
+            const sundayOvertimeHours = sundayRecords.reduce((sum, r) =>
+
+                sum + (Number(r.workingHours) || 0) + (Number(r.overtime) || 0)
+
+            , 0);
+
+            const overtimeHours = Math.round((regularOvertimeHours + sundayOvertimeHours) * 100) / 100;
+
+            const hourlyRate = standardWorkHours > 0 ? dailyRate / standardWorkHours : 0;
+
+            const overtimePay = Math.round(overtimeHours * hourlyRate * 100) / 100;
+
+            const totalPayable = Math.round((netPayable + overtimePay) * 100) / 100;
+
             return {
 
                 employee: {
@@ -248,17 +308,37 @@ router.get("/", async (req, res) => {
 
                 deduction,
 
-                netPayable
+                netPayable,
+
+                overtimeHours,
+
+                overtimePay,
+
+                totalPayable
 
             };
 
         });
+
+        const totalOvertimePay = Math.round(
+
+            results.reduce((sum, r) => sum + r.overtimePay, 0) * 100
+
+        ) / 100;
+
+        const totalPayableWithOvertime = Math.round(
+
+            results.reduce((sum, r) => sum + r.totalPayable, 0) * 100
+
+        ) / 100;
 
         res.json({
 
             month,
             workingDays: workingDaysCount,
             holidayDays: holidayCount,
+            totalOvertimePay,
+            totalPayableWithOvertime,
             results
 
         });
