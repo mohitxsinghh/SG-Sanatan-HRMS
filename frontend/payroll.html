@@ -71,7 +71,7 @@
 
                 <input type="month" id="payrollMonth">
 
-                <p class="filter-note">Deductions: Half Day = 0.5 day, Absent/Leave = 1 full day. Holidays are paid days. Unmarked attendance is treated as Absent during payroll generation. Working days exclude Sundays only.</p>
+                <p class="filter-note">Deductions: Half Day = 0.5 day, Absent/Leave = 1 full day. Holidays are paid days. Unmarked attendance is treated as Absent during payroll generation. Working days exclude Sundays only. Overtime: hours beyond standard on working days, plus ALL hours worked on a Sunday, paid at Daily Rate ÷ Standard Work Hours per hour - added on top of Net Payable.</p>
 
                 <button class="export-btn" id="exportPayrollBtn">
                     <i class="fa-solid fa-file-export"></i> Export CSV
@@ -84,7 +84,8 @@
                 <div class="card"><h3>Employees</h3><h2 id="payrollEmployeeCount">0</h2></div>
                 <div class="card"><h3>Working Days</h3><h2 id="payrollWorkingDays">0</h2></div>
                 <div class="card absent"><h3>Total Deduction</h3><h2 id="payrollTotalDeduction">₹0</h2></div>
-                <div class="card present"><h3>Total Payable</h3><h2 id="payrollTotalPayable">₹0</h2></div>
+                <div class="card"><h3>Total Overtime</h3><h2 id="payrollTotalOvertime">₹0</h2></div>
+                <div class="card present"><h3>Total Payable (incl. OT)</h3><h2 id="payrollTotalPayable">₹0</h2></div>
 
             </div>
 
@@ -106,12 +107,14 @@
                             <th>Daily Rate</th>
                             <th>Deduction</th>
                             <th>Net Payable</th>
+                            <th>Overtime</th>
+                            <th>Total Payable</th>
                         </tr>
                     </thead>
 
                     <tbody id="payrollTable">
 
-                        <tr><td colspan="12">Loading...</td></tr>
+                        <tr><td colspan="14">Loading...</td></tr>
 
                     </tbody>
 
